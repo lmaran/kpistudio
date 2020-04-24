@@ -30,84 +30,136 @@ exports.getReportTest = async () => {
     let columnDimensions = reportDefinition.columnDimensions;
     let totalColumnDimension = columnDimensions.length;
 
-    // rows
     kpis.forEach(kpi => {
         kpiVariants.forEach(kpiVariant => {
-            let facetPipeline = [{ $match: kpi.filter || {} }, { $match: kpiVariant.filter || {} }];
+            for (let rowLevel = totalRowDimension; rowLevel >= 0; rowLevel--) {
+                let facetPipeline = [{ $match: kpi.filter || {} }, { $match: kpiVariant.filter || {} }];
 
-            // ex: { dim1_id: "$branch-id", dim2_id: "$customer-id" }
-            let addDimFields = {};
-            rowDimensions.forEach((dim, idx) => {
-                addDimFields[`r_dim${idx + 1}_id`] = `$${dim.fieldId}`;
-            });
-            columnDimensions.forEach((dim, idx) => {
-                addDimFields[`c_dim${idx + 1}_id`] = `$${dim.fieldId}`;
-            });
-            facetPipeline.push({ $addFields: addDimFields });
+                // ex: { dim1: "$branch-id", dim2: "$customer-id" }
+                let addDimFields = {};
+                rowDimensions.forEach((dim, idx) => {
+                    addDimFields[`r_dim${idx + 1}`] = `$${dim.fieldId}`;
+                });
+                columnDimensions.forEach((dim, idx) => {
+                    addDimFields[`c_dim${idx + 1}`] = `$${dim.fieldId}`;
+                });
+                facetPipeline.push({ $addFields: addDimFields });
 
-            facetPipeline.push({ $addFields: { measure_amt: `$${kpi.kpiFormula}` } });
+                facetPipeline.push({ $addFields: { measure: `$${kpi.kpiFormula}` } });
 
-            // add this layer of grouping just for count unique documents
-            if (kpi.summarizeBy === "COUNTDISTINCT") {
-                let levelGroup = {
-                    _id: `$${kpi.kpiFormula}` // document-number-id,
-                };
+                // add this layer of grouping just for count unique documents
+                if (kpi.summarizeBy === "COUNTDISTINCT") {
+                    let levelGroup = {
+                        _id: `$${kpi.kpiFormula}` // document-number-id,
+                    };
 
-                for (let j = 1; j <= totalRowDimension; j++) {
-                    levelGroup[`r_dim${j}_id`] = { $max: `$r_dim${j}_id` };
-                }
-                for (let j = 1; j <= totalColumnDimension; j++) {
-                    levelGroup[`c_dim${j}_id`] = { $max: `$c_dim${j}_id` };
-                }
-                facetPipeline.push({ $group: levelGroup });
-            }
-
-            for (let level = totalRowDimension; level >= 0; level--) {
-                let levelGroup = {};
-
-                if (level === totalRowDimension) {
-                    let levelDims = {};
-
-                    for (let j = 1; j <= level; j++) {
-                        levelDims[`r_dim${j}_id`] = `$r_dim${j}_id`;
+                    for (let j = 1; j <= totalRowDimension; j++) {
+                        levelGroup[`r_dim${j}`] = { $max: `$r_dim${j}` };
                     }
-                    levelGroup = { _id: levelDims };
-                    if (kpi.summarizeBy === "COUNTDISTINCT") {
-                        levelGroup["measure_amt"] = { $sum: 1 };
-                    } else {
-                        levelGroup["measure_amt"] = { $sum: "$measure_amt" };
+                    for (let j = 1; j <= totalColumnDimension; j++) {
+                        levelGroup[`c_dim${j}`] = { $max: `$c_dim${j}` };
                     }
-                } else {
-                    let levelDims = {};
-                    if (level === 0) {
-                        levelDims = 1;
+                    facetPipeline.push({ $group: levelGroup });
+                }
+
+                for (let colLevel = totalColumnDimension; colLevel >= 0; colLevel--) {
+                    let groupByDims = {};
+
+                    // 1. _id
+                    if (rowLevel === 0 && colLevel === 0) {
+                        groupByDims = null;
                     } else {
-                        for (let j = 1; j <= level; j++) {
-                            levelDims[`r_dim${j}_id`] = `$_id.r_dim${j}_id`;
+                        const prefix = colLevel === totalColumnDimension ? "" : "_id.";
+                        for (let j = 1; j <= rowLevel; j++) {
+                            groupByDims[`r_dim${j}`] = `$${prefix}r_dim${j}`;
+                        }
+                        for (let j = 1; j <= colLevel; j++) {
+                            groupByDims[`c_dim${j}`] = `$${prefix}c_dim${j}`;
                         }
                     }
 
-                    levelGroup = {
-                        _id: levelDims,
-                        measure_amt: { $sum: "$measure_amt" },
-                        documents: {
+                    // 2. measure
+                    let measure = {};
+                    if (kpi.summarizeBy === "SUM") {
+                        measure = { $sum: "$measure" };
+                    } else if (kpi.summarizeBy === "COUNTDISTINCT") {
+                        if (colLevel === totalColumnDimension) {
+                            measure = { $sum: 1 };
+                        } else {
+                            measure = { $sum: "$measure" };
+                        }
+                    }
+
+                    let group = { _id: groupByDims, measure };
+
+                    // 3. documents
+                    if (colLevel !== totalColumnDimension) {
+                        group["documents"] = {
                             $push: {
-                                level: level + 1,
-                                dim_id: `$_id.r_dim${level + 1}_id`,
-                                measure_amt: { $sum: "$measure_amt" },
+                                colLevel: colLevel + 1,
+                                dim: `$_id.c_dim${colLevel + 1}`,
+                                measure: { $sum: "$measure" },
                                 documents: "$documents"
                             }
-                        }
+                        };
+                    }
+
+                    // group
+                    facetPipeline.push({ $group: group });
+
+                    // add fields 1
+
+                    let addFields = {
+                        kpi: kpi.kpiId,
+                        kpiVariant: kpiVariant.kpiVariantId,
+                        rowLevel,
+                        colLevel
                     };
+                    for (let j = 1; j <= totalRowDimension; j++) {
+                        addFields[`rowDim${j}`] = `$_id.r_dim${j}`;
+                    }
+                    facetPipeline.push({ $addFields: addFields });
+
+                    // sort
+                    // const currentColDimension = columnDimensions[colLevel - 1];
+
+                    // console.log(currentColDimension);
+                    // console.log(group._id);
+
+                    // const sort = {};
+
+                    // sort[`_id.r_dim1`] = 1;
+                    // sort[`_id.r_dim2`] = 1;
+                    // sort[`_id.r_dim3`] = 1;
+                    // sort[`_id.c_dim1`] = 1;
+                    // sort[`_id.c_dim2`] = 1;
+                    // sort[`_id.c_dim3`] = -1;
+
+                    // facetPipeline.push({ $sort: sort });
+
+                    facetPipeline.push({ $sort: { _id: 1 } });
+
+                    // add fields & project
+                    if (colLevel === 0) {
+                        let addFields = {
+                            kpi: kpi.kpiId,
+                            kpiVariant: kpiVariant.kpiVariantId,
+                            rowLevel,
+                            colLevel
+                        };
+                        for (let j = 1; j <= totalRowDimension; j++) {
+                            addFields[`rowDim${j}`] = `$_id.r_dim${j}`;
+                        }
+                        facetPipeline.push({ $addFields: addFields });
+                        facetPipeline.push({ $project: { _id: 0 } });
+                    }
                 }
 
-                facetPipeline.push({ $group: levelGroup }, { $sort: { _id: 1 } });
+                // console.dir(facetPipeline, { depth: null });
+                // console.log("===========================");
+
+                facetsObj[`${kpi.kpiId}-${kpiVariant.kpiVariantId}-row-level-${rowLevel}`] = facetPipeline;
             }
-
-            console.dir(facetPipeline, { depth: null });
-            console.log("===========================");
-
-            facetsObj[`${kpi.kpiId}-${kpiVariant.kpiVariantId}-rows`] = facetPipeline;
         });
     });
 
