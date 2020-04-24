@@ -38,28 +38,28 @@ exports.getReportTest = async () => {
                 // ex: { dim1: "$branch-id", dim2: "$customer-id" }
                 let addDimFields = {};
                 rowDimensions.forEach((dim, idx) => {
-                    addDimFields[`r_dim${idx + 1}`] = `$${dim.fieldId}`;
+                    addDimFields[`rowDim${idx + 1}`] = `$${dim.fieldId}`;
                 });
                 columnDimensions.forEach((dim, idx) => {
-                    addDimFields[`c_dim${idx + 1}`] = `$${dim.fieldId}`;
+                    addDimFields[`colDim${idx + 1}`] = `$${dim.fieldId}`;
                 });
                 facetPipeline.push({ $addFields: addDimFields });
 
                 facetPipeline.push({ $addFields: { measure: `$${kpi.kpiFormula}` } });
 
-                // add this layer of grouping just for count unique documents
+                // group by unique documents (additional stage)
                 if (kpi.summarizeBy === "COUNTDISTINCT") {
-                    let levelGroup = {
+                    let group = {
                         _id: `$${kpi.kpiFormula}` // document-number-id,
                     };
 
                     for (let j = 1; j <= totalRowDimension; j++) {
-                        levelGroup[`r_dim${j}`] = { $max: `$r_dim${j}` };
+                        group[`rowDim${j}`] = { $max: `$rowDim${j}` };
                     }
                     for (let j = 1; j <= totalColumnDimension; j++) {
-                        levelGroup[`c_dim${j}`] = { $max: `$c_dim${j}` };
+                        group[`colDim${j}`] = { $max: `$colDim${j}` };
                     }
-                    facetPipeline.push({ $group: levelGroup });
+                    facetPipeline.push({ $group: group });
                 }
 
                 for (let colLevel = totalColumnDimension; colLevel >= 0; colLevel--) {
@@ -69,12 +69,11 @@ exports.getReportTest = async () => {
                     if (rowLevel === 0 && colLevel === 0) {
                         groupByDims = null;
                     } else {
-                        const prefix = colLevel === totalColumnDimension ? "" : "_id.";
                         for (let j = 1; j <= rowLevel; j++) {
-                            groupByDims[`r_dim${j}`] = `$${prefix}r_dim${j}`;
+                            groupByDims[`rowDim${j}`] = `$rowDim${j}`;
                         }
                         for (let j = 1; j <= colLevel; j++) {
-                            groupByDims[`c_dim${j}`] = `$${prefix}c_dim${j}`;
+                            groupByDims[`colDim${j}`] = `$colDim${j}`;
                         }
                     }
 
@@ -97,7 +96,7 @@ exports.getReportTest = async () => {
                         group["documents"] = {
                             $push: {
                                 colLevel: colLevel + 1,
-                                dim: `$_id.c_dim${colLevel + 1}`,
+                                dim: `$colDim${colLevel + 1}`,
                                 measure: { $sum: "$measure" },
                                 documents: "$documents"
                             }
@@ -107,16 +106,13 @@ exports.getReportTest = async () => {
                     // group
                     facetPipeline.push({ $group: group });
 
-                    // add fields 1
-
-                    let addFields = {
-                        kpi: kpi.kpiId,
-                        kpiVariant: kpiVariant.kpiVariantId,
-                        rowLevel,
-                        colLevel
-                    };
+                    // expose dim fields"
+                    let addFields = {};
                     for (let j = 1; j <= totalRowDimension; j++) {
-                        addFields[`rowDim${j}`] = `$_id.r_dim${j}`;
+                        addFields[`rowDim${j}`] = `$_id.rowDim${j}`;
+                    }
+                    for (let j = 1; j <= totalColumnDimension; j++) {
+                        addFields[`colDim${j}`] = `$_id.colDim${j}`;
                     }
                     facetPipeline.push({ $addFields: addFields });
 
@@ -139,7 +135,7 @@ exports.getReportTest = async () => {
 
                     facetPipeline.push({ $sort: { _id: 1 } });
 
-                    // add fields & project
+                    // add first-level fields & the final project
                     if (colLevel === 0) {
                         let addFields = {
                             kpi: kpi.kpiId,
@@ -148,7 +144,7 @@ exports.getReportTest = async () => {
                             colLevel
                         };
                         for (let j = 1; j <= totalRowDimension; j++) {
-                            addFields[`rowDim${j}`] = `$_id.r_dim${j}`;
+                            addFields[`rowDim${j}`] = `$_id.rowDim${j}`;
                         }
                         facetPipeline.push({ $addFields: addFields });
                         facetPipeline.push({ $project: { _id: 0 } });
