@@ -1,0 +1,37 @@
+/* body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: Georgia, Times, Times New Roman, serif;
+    font-weight: 600;
+}
+code,
+pre {
+    font-family: courier new, Courier, monospace;
+} */
+.breadcrumb {
+    padding: 2px;
+    background-color: #f5f5f5;
+    color: #337ab7;
+}
+
+/* Add red star for required fields */
+.required:after {
+    color: #dc3545;
+    content: "*";
+    margin-left: 4px;
+    position: absolute;
+}
+
+/* right align labels in forms 
+https://github.com/twbs/bootstrap/issues/20643#issuecomment-325579156 */
+@media (min-width: 768px) {
+    .form-group.row > .col-form-label {
+        text-align: right;
+    }
+}

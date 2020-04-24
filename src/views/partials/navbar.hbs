@@ -1,0 +1,62 @@
+<style>
+    .navbar {
+        border-bottom: 1px solid #E5E9EF;
+    }
+</style>
+
+{{!-- no sections (head/script) in partials as handlebars doesn't support more that 2 similar sections on the same page
+if 2 similar sections are used, the last one will override the first one --}}
+
+<nav class="navbar navbar-expand-lg navbar-light mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/">KpiStudio</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse"
+            aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav mr-auto">
+
+            </ul>
+
+
+            {{#unless user.activationToken}} {{!do not display this part during user activation}}
+            {{!-- {{toJSON @root.user}} --}}
+            <ul class='navbar-nav ml-auto'>
+                {{#if @root.user}}
+                {{#if @root.user.isAdmin}}
+                <li class="nav-item"><a class="nav-link" href='/admin'>Admin</a></li>
+                {{/if}}
+                {{#if @root.user.isPartner}}
+                <li class="nav-item"><a class="nav-link" href='/admin'>Admin</a></li>
+                {{/if}}
+                <li class="nav-item dropdown">
+                    <a class='nav-link dropdown-toggle' href="/" id="navbarDropdown2" role="button"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <!--<img src='//www.gravatar.com/avatar/6f137572059f8c0f23363e8678d7a795' width="20" height="20">-->
+                        {{@root.user.firstName}} {{@root.user.lastName}}
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="/change-password">Schimbă parola</a>
+                        <a class="dropdown-item" href="/reset-password">Resetează parola</a>
+                        <a class="dropdown-item"
+                            href="/logout{{#if @root.isNotRootPath}}?redirect_uri={{@root.redirectUri}}{{/if}}">Log
+                            out</a>
+                    </div>
+                </li>
+                {{else}}
+                <li class="nav-item">
+                    <a class="nav-link" href="/signup">Cont nou</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link"
+                        href="/login{{#if @root.isNotRootPath}}?redirect_uri={{@root.redirectUri}}{{/if}}">Login</a>
+                </li>
+                {{/if}}
+
+            </ul>
+            {{/unless}}
+
+        </div>
+    </div>
+</nav>

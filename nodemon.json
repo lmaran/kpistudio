@@ -1,0 +1,10 @@
+{
+    "verbose": false,
+    "watch": ["."],
+    "ignore": [".git", "node_modules/**/node_modules", "**/*.test.js"],
+    "exec": "node src/server.js",
+    "env": {
+        "NODE_ENV": "development"
+    },
+    "ext": "js, json"
+}

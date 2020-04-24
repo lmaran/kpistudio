@@ -1,0 +1,19 @@
+# humanstxt.org/
+# The humans responsible & technology colophon
+
+# TEAM
+
+    Lucian Maran - Web Developer
+
+# THANKS
+
+    Daniela Maran - consultant educativ
+
+# TECHNOLOGY COLOPHON
+
+    Client Side: CSS3, HTML5, JavaScript (vanilla), Bootstrap
+    Server Side: NodeJS, Express, MongoDB, Handlebars
+    Dev Tools: Typescript, TSLint
+    IDE: VSCode, Prettier, BrowserSync
+    Infrastructure: Azure VMs, Ubuntu, NGINX, HAProxy, GitHub, Codeship
+    Favicon: https://favicon.io/favicon-generator/?t=21&ff=Marko+One&fs=110&fc=%23FFFFFF&b=rounded&bc=%23F00
