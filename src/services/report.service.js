@@ -1,8 +1,7 @@
 const mongoHelper = require("../helpers/mongo.helper");
 const { ObjectID } = require("mongodb");
 
-const reportsCollection = "reportDefinitions";
-const collection = "reportDefinitions";
+const reportDefinitionCollection = "reportDefinitions";
 const reportDataCollection = "reportData";
 
 exports.getPersonById = async id => {
@@ -14,7 +13,7 @@ exports.getReportTest = async () => {
     const db = await mongoHelper.getDb();
 
     const reportId = "5e94840bbff00f4417e6eb42";
-    const reportDefinition = await db.collection(reportsCollection).findOne({ _id: new ObjectID(reportId) });
+    const reportDefinition = await db.collection(reportDefinitionCollection).findOne({ _id: new ObjectID(reportId) });
 
     // console.log(reportDefinition);
 
@@ -169,10 +168,10 @@ exports.getReportTest = async () => {
         .toArray();
 };
 
-exports.getReportTest2 = async () => {
+exports.getReportDefinition = async () => {
     const id = "5e94840bbff00f4417e6eb42";
     const db = await mongoHelper.getDb();
-    return db.collection(reportsCollection).findOne({ _id: new ObjectID(id) });
+    return db.collection(reportDefinitionCollection).findOne({ _id: new ObjectID(id) });
 };
 
 exports.getReportTest3 = async () => {
