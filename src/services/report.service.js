@@ -92,13 +92,18 @@ exports.getReportTest = async () => {
 
                     // 3. documents
                     if (colLevel !== totalColumnDimension) {
+                        let pushObj = {
+                            colLevel: colLevel + 1,
+                            //dim: `$colDim${colLevel + 1}`,
+                            measure: { $sum: "$measure" },
+                            documents: "$documents"
+                        };
+                        //pushObj[`colDim${colLevel + 1}`] = `$colDim${colLevel + 1}`;
+                        for (let j = 1; j <= colLevel + 1; j++) {
+                            pushObj[`colDim${j}`] = `$colDim${j}`;
+                        }
                         group["documents"] = {
-                            $push: {
-                                colLevel: colLevel + 1,
-                                dim: `$colDim${colLevel + 1}`,
-                                measure: { $sum: "$measure" },
-                                documents: "$documents"
-                            }
+                            $push: pushObj
                         };
                     }
 
