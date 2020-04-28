@@ -50,6 +50,7 @@ exports.getHomePage = async (req, res) => {
     kpiVariants.forEach(kpiVariant => {
         let kpiVariantHeader = { colLevel: 0 };
         let unsortedHeaderColumns = [{ colLevel: 0 }]; // we have different headers for each variant
+        // let sortedHeaderColumnsObj = {}; // we have different headers for each variant
 
         kpis.forEach((kpi, idx) => {
             // level 0
@@ -80,9 +81,12 @@ exports.getHomePage = async (req, res) => {
             colDim1: 2018
         });
 
-        const sortedHeaderColumns = sortHeaderColumns(unsortedHeaderColumns);
+        // const sortedHeaderColumns = sortHeaderColumns(unsortedHeaderColumns);
 
-        headers[`header-${kpiVariant.kpiVariantId}`] = sortedHeaderColumns;
+        //const sortedHeaderColumnsObj = getSortHeaderColumnsObj(unsortedHeaderColumns);
+
+        //headers[`header-${kpiVariant.kpiVariantId}`] = sortedHeaderColumnsObj;
+        headers[`test`] = unsortedHeaderColumns;
     });
 
     let data = {
@@ -93,6 +97,75 @@ exports.getHomePage = async (req, res) => {
 
     res.send(data);
     // res.render("home", { data, layout: false });
+};
+
+const getSortHeaderColumnsObj = unsortedHeaderColumns => {
+    let result = {};
+    unsortedHeaderColumns.forEach((col, idx) => {
+        addColumnToResult(col, result, idx);
+    });
+    return result;
+};
+
+const addColumnToResult = (source, result, idx) => {
+    console.log(" ");
+    console.log("source:");
+    console.log(source);
+    console.log("result in:");
+    console.log(result);
+
+    //result[idx] = col;
+    if (source.colLevel === 0) {
+        result.colLevel = 0;
+    }
+
+    if (source.colLevel === 1) {
+        // create first level (if not exist)
+        if (result.colLevel !== 0) {
+            result.colLevel = 0;
+        }
+        // up one level
+        if (result.documents) {
+            let found = result.documents.find(x => x.colLevel === 1 && x.colDim1 === source.colDim1);
+            if (!found) {
+                result.documents.push(source);
+            }
+        } else {
+            result.documents = [source];
+        }
+    }
+
+    // console.log(result);
+
+    if (source.colLevel === 2) {
+        // create first level (if not exist)
+        if (result.colLevel !== 0) {
+            result.colLevel = 0;
+        }
+
+        // up one level
+        if (!result.documents) {
+            result.documents = [{ colLevel: 1, colDim1: source.colDim1 }];
+        }
+
+        let nextTarget = result.documents.find(x => x.colLevel === 1 && x.colDim1 === source.colDim1);
+        if (!nextTarget) {
+            console.log("not found");
+            result.documents.push({ aaa: 111, colLevel: 1, colDim1: source.colDim1, documents: [source] });
+        } else {
+            if (nextTarget.documents) {
+                let nextTarget2 = nextTarget.documents.find(x => x.colLevel === 1 && x.colDim1 === source.colDim1);
+                if (!nextTarget2) {
+                    nextTarget.documents.push(source);
+                }
+            } else {
+                nextTarget.documents = [source];
+            }
+        }
+    }
+    console.log("result out:");
+    console.log(result);
+    console.log("====================== end");
 };
 
 const createUnsortedHeaderColumns = (sourceParent, unsortedHeaderColumns) => {
