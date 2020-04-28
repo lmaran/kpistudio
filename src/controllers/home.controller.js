@@ -83,10 +83,10 @@ exports.getHomePage = async (req, res) => {
 
         // const sortedHeaderColumns = sortHeaderColumns(unsortedHeaderColumns);
 
-        //const sortedHeaderColumnsObj = getSortHeaderColumnsObj(unsortedHeaderColumns);
+        const sortedHeaderColumnsObj = getSortHeaderColumnsObj(unsortedHeaderColumns);
 
-        //headers[`header-${kpiVariant.kpiVariantId}`] = sortedHeaderColumnsObj;
-        headers[`test`] = unsortedHeaderColumns;
+        headers[`header-${kpiVariant.kpiVariantId}`] = sortedHeaderColumnsObj;
+        //headers[`test`] = unsortedHeaderColumns;
     });
 
     let data = {
@@ -107,65 +107,170 @@ const getSortHeaderColumnsObj = unsortedHeaderColumns => {
     return result;
 };
 
+const addColumnToResult_backup_OK = (source, result, idx) => {
+    let targetLevel0 = {},
+        targetLevel1 = {},
+        targetLevel2 = {},
+        targetLevel3 = {};
+    let childColLevel = 0;
+
+    // create first level (if not exist)
+    targetLevel0 = result;
+    if (source.colLevel >= 0) {
+        if (targetLevel0.colLevel !== 0) {
+            targetLevel0.colLevel = 0;
+        }
+    }
+
+    // up to level 1
+    childColLevel = targetLevel0.colLevel + 1;
+    if (source.colLevel >= childColLevel) {
+        if (!targetLevel0.documents) targetLevel0.documents = [];
+
+        targetLevel1 = targetLevel0.documents.find(x => {
+            let result = x.colLevel === childColLevel;
+            for (let i = 1; i <= childColLevel; i++) {
+                result = result && x[`colDim${i}`] === source[`colDim${i}`];
+            }
+            return result;
+        });
+
+        if (!targetLevel1) {
+            targetLevel1 = { colLevel: childColLevel };
+            for (let i = 1; i <= childColLevel; i++) {
+                targetLevel1[`colDim${i}`] = source[`colDim${i}`];
+            }
+            targetLevel0.documents.push(targetLevel1);
+        }
+    }
+
+    // up to level 2
+    childColLevel = targetLevel1.colLevel + 1;
+    if (source.colLevel >= childColLevel) {
+        if (!targetLevel1.documents) targetLevel1.documents = [];
+
+        targetLevel2 = targetLevel1.documents.find(x => {
+            let result = x.colLevel === childColLevel;
+            for (let i = 1; i <= childColLevel; i++) {
+                result = result && x[`colDim${i}`] === source[`colDim${i}`];
+            }
+            return result;
+        });
+
+        if (!targetLevel2) {
+            targetLevel2 = { colLevel: childColLevel };
+            for (let i = 1; i <= childColLevel; i++) {
+                targetLevel2[`colDim${i}`] = source[`colDim${i}`];
+            }
+            targetLevel1.documents.push(targetLevel2);
+        }
+    }
+
+    // up to level 3
+    childColLevel = targetLevel2.colLevel + 1; // 3
+    if (source.colLevel >= childColLevel) {
+        if (!targetLevel2.documents) targetLevel2.documents = [];
+
+        targetLevel3 = targetLevel2.documents.find(x => {
+            let result = x.colLevel === childColLevel;
+            for (let i = 1; i <= childColLevel; i++) {
+                result = result && x[`colDim${i}`] === source[`colDim${i}`];
+            }
+            return result;
+        });
+
+        if (!targetLevel3) {
+            // same as source
+            targetLevel3 = { colLevel: childColLevel };
+            for (let i = 1; i <= childColLevel; i++) {
+                targetLevel3[`colDim${i}`] = source[`colDim${i}`];
+            }
+            targetLevel2.documents.push(targetLevel3);
+        }
+    }
+};
+
 const addColumnToResult = (source, result, idx) => {
-    console.log(" ");
-    console.log("source:");
-    console.log(source);
-    console.log("result in:");
-    console.log(result);
+    let targetLevel0 = {},
+        targetLevel1 = {},
+        targetLevel2 = {},
+        targetLevel3 = {};
+    let childColLevel = 0;
 
-    //result[idx] = col;
-    if (source.colLevel === 0) {
-        result.colLevel = 0;
+    // create first level (if not exist)
+    targetLevel0 = result;
+    if (source.colLevel >= 0) {
+        if (targetLevel0.colLevel !== 0) {
+            targetLevel0.colLevel = 0;
+        }
     }
 
-    if (source.colLevel === 1) {
-        // create first level (if not exist)
-        if (result.colLevel !== 0) {
-            result.colLevel = 0;
-        }
-        // up one level
-        if (result.documents) {
-            let found = result.documents.find(x => x.colLevel === 1 && x.colDim1 === source.colDim1);
-            if (!found) {
-                result.documents.push(source);
+    // up to level 1
+    childColLevel = targetLevel0.colLevel + 1; // 1
+    if (source.colLevel >= childColLevel) {
+        if (!targetLevel0.documents) targetLevel0.documents = [];
+
+        targetLevel1 = targetLevel0.documents.find(x => {
+            let result = x.colLevel === childColLevel;
+            for (let i = 1; i <= childColLevel; i++) {
+                result = result && x[`colDim${i}`] === source[`colDim${i}`];
             }
-        } else {
-            result.documents = [source];
-        }
-    }
+            return result;
+        });
 
-    // console.log(result);
-
-    if (source.colLevel === 2) {
-        // create first level (if not exist)
-        if (result.colLevel !== 0) {
-            result.colLevel = 0;
-        }
-
-        // up one level
-        if (!result.documents) {
-            result.documents = [{ colLevel: 1, colDim1: source.colDim1 }];
-        }
-
-        let nextTarget = result.documents.find(x => x.colLevel === 1 && x.colDim1 === source.colDim1);
-        if (!nextTarget) {
-            console.log("not found");
-            result.documents.push({ aaa: 111, colLevel: 1, colDim1: source.colDim1, documents: [source] });
-        } else {
-            if (nextTarget.documents) {
-                let nextTarget2 = nextTarget.documents.find(x => x.colLevel === 1 && x.colDim1 === source.colDim1);
-                if (!nextTarget2) {
-                    nextTarget.documents.push(source);
-                }
-            } else {
-                nextTarget.documents = [source];
+        if (!targetLevel1) {
+            targetLevel1 = { colLevel: childColLevel };
+            for (let i = 1; i <= childColLevel; i++) {
+                targetLevel1[`colDim${i}`] = source[`colDim${i}`];
             }
+            targetLevel0.documents.push(targetLevel1);
         }
     }
-    console.log("result out:");
-    console.log(result);
-    console.log("====================== end");
+
+    // up to level 2
+    childColLevel = targetLevel1.colLevel + 1; // 2
+    if (source.colLevel >= childColLevel) {
+        if (!targetLevel1.documents) targetLevel1.documents = [];
+
+        targetLevel2 = targetLevel1.documents.find(x => {
+            let result = x.colLevel === childColLevel;
+            for (let i = 1; i <= childColLevel; i++) {
+                result = result && x[`colDim${i}`] === source[`colDim${i}`];
+            }
+            return result;
+        });
+
+        if (!targetLevel2) {
+            targetLevel2 = { colLevel: childColLevel };
+            for (let i = 1; i <= childColLevel; i++) {
+                targetLevel2[`colDim${i}`] = source[`colDim${i}`];
+            }
+            targetLevel1.documents.push(targetLevel2);
+        }
+    }
+
+    // up to level 3
+    childColLevel = targetLevel2.colLevel + 1; // 3
+    if (source.colLevel >= childColLevel) {
+        if (!targetLevel2.documents) targetLevel2.documents = [];
+
+        targetLevel3 = targetLevel2.documents.find(x => {
+            let result = x.colLevel === childColLevel;
+            for (let i = 1; i <= childColLevel; i++) {
+                result = result && x[`colDim${i}`] === source[`colDim${i}`];
+            }
+            return result;
+        });
+
+        if (!targetLevel3) {
+            // same as source
+            targetLevel3 = { colLevel: childColLevel };
+            for (let i = 1; i <= childColLevel; i++) {
+                targetLevel3[`colDim${i}`] = source[`colDim${i}`];
+            }
+            targetLevel2.documents.push(targetLevel3);
+        }
+    }
 };
 
 const createUnsortedHeaderColumns = (sourceParent, unsortedHeaderColumns) => {
