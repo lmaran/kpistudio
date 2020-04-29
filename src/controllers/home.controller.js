@@ -59,40 +59,51 @@ exports.getHomePage = async (req, res) => {
             addTreeObjectsToListRecursively(kv0, unsortedHeaderList);
         });
 
-        unsortedHeaderList.push({
-            //measure: 3333,
-            colLevel: 3,
-            colDim1: 2018,
-            colDim2: 201803,
-            colDim3: 201808
-        });
+        // unsortedHeaderList.push({
+        //     //measure: 3333,
+        //     colLevel: 3,
+        //     colDim1: 2018,
+        //     colDim2: 201803,
+        //     colDim3: 201808
+        // });
 
-        unsortedHeaderList.push({
-            //measure: 2222,
-            colLevel: 2,
-            colDim1: 2018,
-            colDim2: 201803
-        });
+        // unsortedHeaderList.push({
+        //     //measure: 2222,
+        //     colLevel: 2,
+        //     colDim1: 2018,
+        //     colDim2: 201803
+        // });
 
-        unsortedHeaderList.push({
-            //measure: 1111,
-            colLevel: 1,
-            colDim1: 2018
-        });
+        // unsortedHeaderList.push({
+        //     //measure: 1111,
+        //     colLevel: 1,
+        //     colDim1: 2018
+        // });
+
+        // unsortedHeaderList.push({
+        //     //measure: 3333,
+        //     colLevel: 3,
+        //     colDim1: 2018,
+        //     colDim2: 201803,
+        //     colDim3: 201807
+        // });
 
         // const sortedHeaderColumns = sortHeaderColumns(unsortedHeaderList);
 
         const unsortedHeaderTree = getUnsortedHeaderTree(unsortedHeaderList);
 
-        const sortedHeaderTree = geSortedHeaderTree(unsortedHeaderTree);
+        const sortedHeaderTree = getSortedHeaderTree(unsortedHeaderTree);
 
-        headers[`header-${kpiVariant.kpiVariantId}`] = sortedHeaderTree;
-        //headers[`test`] = unsortedHeaderList;
+        let sortedHeaderList = [{ colLevel: 0 }];
+        addTreeObjectsToListRecursively(sortedHeaderTree, sortedHeaderList);
+
+        headers[`header-${kpiVariant.kpiVariantId}`] = sortedHeaderList;
+        //headers[`sortedHeaderList`] = sortedHeaderList;
     });
 
     let data = {
-        headers
-        //rows
+        headers,
+        rows
         //mongoData
     };
 
@@ -100,8 +111,86 @@ exports.getHomePage = async (req, res) => {
     // res.render("home", { data, layout: false });
 };
 
-const geSortedHeaderTree = unsortedHeaderTree => {
-    return unsortedHeaderTree;
+// get an unsorted TREE and return a sorted TREE
+const getSortedHeaderTree = sourceTreeParent => {
+    // Example:
+
+    // let sourceTree = {
+    //     colLevel: 0,
+    //     documents: [
+    //         {
+    //             colLevel: 1,
+    //             colDim1: 2019,
+    //             documents: [
+    //                 {
+    //                     colLevel: 2,
+    //                     colDim1: 2019,
+    //                     colDim2: 201902
+    //                 },
+    //                 {
+    //                     colLevel: 2,
+    //                     colDim1: 2019,
+    //                     colDim2: 201901
+    //                 }
+    //             ]
+    //         },
+    //         {
+    //             colLevel: 1,
+    //             colDim1: 2020
+    //         },
+    //         {
+    //             colLevel: 1,
+    //             colDim1: 2018
+    //         }
+    //     ]
+    // };
+
+    // let targetTree = {
+    //     colLevel: 0,
+    //     documents: [
+    //         {
+    //             colLevel: 1,
+    //             colDim1: 2018
+    //         },
+    //         {
+    //             colLevel: 1,
+    //             colDim1: 2019,
+    //             documents: [
+    //                 {
+    //                     colLevel: 2,
+    //                     colDim1: 2019,
+    //                     colDim2: 201901
+    //                 },
+    //                 {
+    //                     colLevel: 2,
+    //                     colDim1: 2019,
+    //                     colDim2: 201902
+    //                 }
+    //             ]
+    //         },
+    //         {
+    //             colLevel: 1,
+    //             colDim1: 2020
+    //         }
+    //     ]
+    // };
+
+    // colLevel 0 has been added at the init time
+    if (sourceTreeParent.documents) {
+        // sort elements inside sourceTreeParent.documents
+        let childColLevel = sourceTreeParent.colLevel + 1;
+        sourceTreeParent.documents.sort((a, b) => {
+            if (a[`colDim${childColLevel}`] > b[`colDim${childColLevel}`]) return 1;
+            else if (a[`colDim${childColLevel}`] < b[`colDim${childColLevel}`]) return -1;
+            else return 0;
+        });
+
+        sourceTreeParent.documents.forEach(sourceTreeChild => {
+            getSortedHeaderTree(sourceTreeChild);
+        });
+    }
+
+    return sourceTreeParent;
 };
 
 const getUnsortedHeaderTree = unsortedHeaderList => {
