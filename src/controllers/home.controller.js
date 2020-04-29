@@ -48,8 +48,7 @@ exports.getHomePage = async (req, res) => {
     let headers = {};
 
     kpiVariants.forEach(kpiVariant => {
-        let kpiVariantHeader = { colLevel: 0 };
-        let unsortedHeaderColumns = [{ colLevel: 0 }]; // we have different headers for each variant
+        let unsortedHeaderList = [{ colLevel: 0 }]; // we have different headers for each variant
         // let sortedHeaderColumnsObj = {}; // we have different headers for each variant
 
         kpis.forEach((kpi, idx) => {
@@ -57,10 +56,10 @@ exports.getHomePage = async (req, res) => {
             const kv0s = mongoDataAsObj[`${kpi.kpiId}-${kpiVariant.kpiVariantId}-row-level-${0}`];
             const kv0 = kv0s[0]; // we take into consideration only level 0 rows
 
-            createUnsortedHeaderColumns(kv0, unsortedHeaderColumns);
+            addTreeObjectsToListRecursively(kv0, unsortedHeaderList);
         });
 
-        unsortedHeaderColumns.push({
+        unsortedHeaderList.push({
             //measure: 3333,
             colLevel: 3,
             colDim1: 2018,
@@ -68,25 +67,27 @@ exports.getHomePage = async (req, res) => {
             colDim3: 201808
         });
 
-        unsortedHeaderColumns.push({
+        unsortedHeaderList.push({
             //measure: 2222,
             colLevel: 2,
             colDim1: 2018,
             colDim2: 201803
         });
 
-        unsortedHeaderColumns.push({
+        unsortedHeaderList.push({
             //measure: 1111,
             colLevel: 1,
             colDim1: 2018
         });
 
-        // const sortedHeaderColumns = sortHeaderColumns(unsortedHeaderColumns);
+        // const sortedHeaderColumns = sortHeaderColumns(unsortedHeaderList);
 
-        const sortedHeaderColumnsObj = getSortHeaderColumnsObj(unsortedHeaderColumns);
+        const unsortedHeaderTree = getUnsortedHeaderTree(unsortedHeaderList);
 
-        headers[`header-${kpiVariant.kpiVariantId}`] = sortedHeaderColumnsObj;
-        //headers[`test`] = unsortedHeaderColumns;
+        const sortedHeaderTree = geSortedHeaderTree(unsortedHeaderTree);
+
+        headers[`header-${kpiVariant.kpiVariantId}`] = sortedHeaderTree;
+        //headers[`test`] = unsortedHeaderList;
     });
 
     let data = {
@@ -99,204 +100,133 @@ exports.getHomePage = async (req, res) => {
     // res.render("home", { data, layout: false });
 };
 
-const getSortHeaderColumnsObj = unsortedHeaderColumns => {
-    let result = {};
-    unsortedHeaderColumns.forEach((col, idx) => {
-        addColumnToResult(col, result, idx);
+const geSortedHeaderTree = unsortedHeaderTree => {
+    return unsortedHeaderTree;
+};
+
+const getUnsortedHeaderTree = unsortedHeaderList => {
+    let result = { colLevel: 0 };
+    unsortedHeaderList.forEach(headerElement => {
+        addObjectToTreeRecursively(headerElement, result);
     });
     return result;
 };
 
-const addColumnToResult_backup_OK = (source, result, idx) => {
-    let targetLevel0 = {},
-        targetLevel1 = {},
-        targetLevel2 = {},
-        targetLevel3 = {};
-    let childColLevel = 0;
+// take an object (source) and add it into an object TREE (target)
+// create also the FULL PATH (in the tree) if not exist
+const addObjectToTreeRecursively = (sourceObj, targetTreeParent) => {
+    // Example:
 
-    // create first level (if not exist)
-    targetLevel0 = result;
-    if (source.colLevel >= 0) {
-        if (targetLevel0.colLevel !== 0) {
-            targetLevel0.colLevel = 0;
-        }
-    }
+    // let sourceObjEx = {
+    //     colLevel: 2,
+    //     colDim1: 2019,
+    //     colDim2: 201902
+    // };
 
-    // up to level 1
-    childColLevel = targetLevel0.colLevel + 1;
-    if (source.colLevel >= childColLevel) {
-        if (!targetLevel0.documents) targetLevel0.documents = [];
+    // let initialTargetTreeEx = {
+    //     colLevel: 0
+    // };
 
-        targetLevel1 = targetLevel0.documents.find(x => {
-            let result = x.colLevel === childColLevel;
-            for (let i = 1; i <= childColLevel; i++) {
-                result = result && x[`colDim${i}`] === source[`colDim${i}`];
-            }
-            return result;
-        });
+    // let finalTargetTreeEx = {
+    //     colLevel: 0,
+    //     documents: [
+    //         {
+    //             colLevel: 1,
+    //             colDim1: 2019,
+    //             documents: [
+    //                 {
+    //                     colLevel: 2,
+    //                     colDim1: 2019,
+    //                     colDim2: 201901
+    //                 }
+    //             ]
+    //         }
+    //     ]
+    // };
 
-        if (!targetLevel1) {
-            targetLevel1 = { colLevel: childColLevel };
-            for (let i = 1; i <= childColLevel; i++) {
-                targetLevel1[`colDim${i}`] = source[`colDim${i}`];
-            }
-            targetLevel0.documents.push(targetLevel1);
-        }
-    }
-
-    // up to level 2
-    childColLevel = targetLevel1.colLevel + 1;
-    if (source.colLevel >= childColLevel) {
-        if (!targetLevel1.documents) targetLevel1.documents = [];
-
-        targetLevel2 = targetLevel1.documents.find(x => {
-            let result = x.colLevel === childColLevel;
-            for (let i = 1; i <= childColLevel; i++) {
-                result = result && x[`colDim${i}`] === source[`colDim${i}`];
-            }
-            return result;
-        });
-
-        if (!targetLevel2) {
-            targetLevel2 = { colLevel: childColLevel };
-            for (let i = 1; i <= childColLevel; i++) {
-                targetLevel2[`colDim${i}`] = source[`colDim${i}`];
-            }
-            targetLevel1.documents.push(targetLevel2);
-        }
-    }
-
-    // up to level 3
-    childColLevel = targetLevel2.colLevel + 1; // 3
-    if (source.colLevel >= childColLevel) {
-        if (!targetLevel2.documents) targetLevel2.documents = [];
-
-        targetLevel3 = targetLevel2.documents.find(x => {
-            let result = x.colLevel === childColLevel;
-            for (let i = 1; i <= childColLevel; i++) {
-                result = result && x[`colDim${i}`] === source[`colDim${i}`];
-            }
-            return result;
-        });
-
-        if (!targetLevel3) {
-            // same as source
-            targetLevel3 = { colLevel: childColLevel };
-            for (let i = 1; i <= childColLevel; i++) {
-                targetLevel3[`colDim${i}`] = source[`colDim${i}`];
-            }
-            targetLevel2.documents.push(targetLevel3);
-        }
-    }
-};
-
-const addColumnToResult = (source, result, idx) => {
-    let targetLevel0 = {},
-        targetLevel1 = {},
-        targetLevel2 = {},
-        targetLevel3 = {};
-    let childColLevel = 0;
-
-    // create first level (if not exist)
-    targetLevel0 = result;
-    if (source.colLevel >= 0) {
-        if (targetLevel0.colLevel !== 0) {
-            targetLevel0.colLevel = 0;
-        }
-    }
-
-    // up to level 1
-    childColLevel = targetLevel0.colLevel + 1; // 1
-    if (source.colLevel >= childColLevel) {
-        if (!targetLevel0.documents) targetLevel0.documents = [];
-
-        targetLevel1 = targetLevel0.documents.find(x => {
-            let result = x.colLevel === childColLevel;
-            for (let i = 1; i <= childColLevel; i++) {
-                result = result && x[`colDim${i}`] === source[`colDim${i}`];
-            }
-            return result;
-        });
-
-        if (!targetLevel1) {
-            targetLevel1 = { colLevel: childColLevel };
-            for (let i = 1; i <= childColLevel; i++) {
-                targetLevel1[`colDim${i}`] = source[`colDim${i}`];
-            }
-            targetLevel0.documents.push(targetLevel1);
-        }
-    }
-
-    // up to level 2
-    childColLevel = targetLevel1.colLevel + 1; // 2
-    if (source.colLevel >= childColLevel) {
-        if (!targetLevel1.documents) targetLevel1.documents = [];
-
-        targetLevel2 = targetLevel1.documents.find(x => {
-            let result = x.colLevel === childColLevel;
-            for (let i = 1; i <= childColLevel; i++) {
-                result = result && x[`colDim${i}`] === source[`colDim${i}`];
-            }
-            return result;
-        });
-
-        if (!targetLevel2) {
-            targetLevel2 = { colLevel: childColLevel };
-            for (let i = 1; i <= childColLevel; i++) {
-                targetLevel2[`colDim${i}`] = source[`colDim${i}`];
-            }
-            targetLevel1.documents.push(targetLevel2);
-        }
-    }
-
-    // up to level 3
-    childColLevel = targetLevel2.colLevel + 1; // 3
-    if (source.colLevel >= childColLevel) {
-        if (!targetLevel2.documents) targetLevel2.documents = [];
-
-        targetLevel3 = targetLevel2.documents.find(x => {
-            let result = x.colLevel === childColLevel;
-            for (let i = 1; i <= childColLevel; i++) {
-                result = result && x[`colDim${i}`] === source[`colDim${i}`];
-            }
-            return result;
-        });
-
-        if (!targetLevel3) {
-            // same as source
-            targetLevel3 = { colLevel: childColLevel };
-            for (let i = 1; i <= childColLevel; i++) {
-                targetLevel3[`colDim${i}`] = source[`colDim${i}`];
-            }
-            targetLevel2.documents.push(targetLevel3);
-        }
-    }
-};
-
-const createUnsortedHeaderColumns = (sourceParent, unsortedHeaderColumns) => {
     // colLevel 0 has been added at the init time
-    if (sourceParent.documents) {
-        sourceParent.documents.forEach(sourceChild => {
-            //const newObj = { measure: sourceChild.measure, colLevel: sourceChild.colLevel };
-            const newObj = { colLevel: sourceChild.colLevel };
-            for (let i = 1; i <= sourceChild.colLevel; i++) {
-                newObj[`colDim${i}`] = sourceChild[`colDim${i}`];
+    let targetTreeChildColLevel = targetTreeParent.colLevel + 1;
+    if (sourceObj.colLevel >= targetTreeChildColLevel) {
+        if (!targetTreeParent.documents) targetTreeParent.documents = [];
+
+        // go up to the next child
+        let targetTreeChild = targetTreeParent.documents.find(x => {
+            let result = true;
+            for (let i = 1; i <= targetTreeChildColLevel; i++) {
+                result = result && x[`colDim${i}`] === sourceObj[`colDim${i}`];
+            }
+            return result;
+        });
+
+        if (!targetTreeChild) {
+            targetTreeChild = { colLevel: targetTreeChildColLevel };
+            for (let i = 1; i <= targetTreeChildColLevel; i++) {
+                targetTreeChild[`colDim${i}`] = sourceObj[`colDim${i}`];
+            }
+            targetTreeParent.documents.push(targetTreeChild);
+        }
+
+        addObjectToTreeRecursively(sourceObj, targetTreeChild);
+    }
+};
+
+// take a TREE (source), go through all its objects (leaves) and add them into a flat LIST (if it's not already there)
+const addTreeObjectsToListRecursively = (sourceTreeParent, targetList) => {
+    // Example:
+
+    // let sourceTreeEx = {
+    //     colLevel: 0,
+    //     documents: [
+    //         {
+    //             colLevel: 1,
+    //             colDim1: 2019,
+    //             documents: [
+    //                 {
+    //                     colLevel: 2,
+    //                     colDim1: 2019,
+    //                     colDim2: 201901
+    //                 }
+    //             ]
+    //         }
+    //     ]
+    // };
+
+    // let initialTargetListEx = [{ colLevel: 0 }]
+
+    // let finalTargetListEx = [
+    //     { colLevel: 0 },
+    //     {
+    //         colLevel: 1,
+    //         colDim1: 2019
+    //     },
+    //     {
+    //         colLevel: 2,
+    //         colDim1: 2019,
+    //         colDim2: 201902
+    //     }
+    // ];
+
+    // colLevel 0 has been added at the init time
+    if (sourceTreeParent.documents) {
+        sourceTreeParent.documents.forEach(sourceTreeChild => {
+            // clone the sourceTreeChild (but without documents)
+            const newChild = { colLevel: sourceTreeChild.colLevel };
+            for (let i = 1; i <= sourceTreeChild.colLevel; i++) {
+                newChild[`colDim${i}`] = sourceTreeChild[`colDim${i}`];
             }
 
-            let found = unsortedHeaderColumns.find(x => {
-                // result = x.colLevel = newObj.colLevel;
+            let found = targetList.find(x => {
                 result = true;
-
-                for (let j = 1; j <= newObj.colLevel; j++) {
-                    result = result && x[`colDim${j}`] === newObj[`colDim${j}`];
+                for (let i = 1; i <= newChild.colLevel; i++) {
+                    result = result && x[`colDim${i}`] === newChild[`colDim${i}`];
                 }
                 return result;
             });
             if (!found) {
-                unsortedHeaderColumns.push(newObj);
+                targetList.push(newChild);
             }
 
-            createUnsortedHeaderColumns(sourceChild, unsortedHeaderColumns);
+            addTreeObjectsToListRecursively(sourceTreeChild, targetList);
         });
     }
 };
@@ -322,53 +252,6 @@ const addRowsRecursively = (parentKv, totalRowDimension, mongoDataAsObj, kpi, kp
 
             addRowsRecursively(childKv, totalRowDimension, mongoDataAsObj, kpi, kpiVariant, rows);
         });
-    }
-};
-
-const sortHeaderColumns = unsortedHeaderColumns => {
-    const sortedByColLevel = unsortedHeaderColumns.sort((a, b) => {
-        return a.colLevel > b.colLevel ? 1 : -1;
-        //return a.colDim3 > b.colDim3 ? 1 : -1;
-    });
-
-    headerObj = { colLevel: 0 };
-
-    // sortedByColLevel.forEach(source => {
-    //     // if (source.colLevel > 0) {
-    //     //     addToHeaderRecursively(source, headerObj);
-    //     // }
-    // });
-
-    //return headerObj;
-    return sortedByColLevel;
-};
-
-const addToHeaderRecursivelyOld = (source, target) => {
-    if (source.colLevel === 1) {
-        if (target.documents) {
-            target.documents.push(source);
-        } else {
-            target.documents = [source];
-        }
-    } else if (source.colLevel === 2) {
-        // up one level
-        let nextTarget = target.documents.find(x => x.colDim1 === source.colDim1);
-
-        if (nextTarget.documents) {
-            nextTarget.documents.push(source);
-        } else {
-            nextTarget.documents = [source];
-        }
-    } else if (source.colLevel === 3) {
-        // up one level
-        let nextTarget1 = target.documents.find(x => x.colDim1 === source.colDim1);
-        let nextTarget = nextTarget1.documents.find(x => x.colDim2 === source.colDim2);
-
-        if (nextTarget.documents) {
-            nextTarget.documents.push(source);
-        } else {
-            nextTarget.documents = [source];
-        }
     }
 };
 
