@@ -1,1 +1,42 @@
-{{toJSON this.data}}
+{{!toJSON data}}
+{{#section 'head'}}
+<style>
+
+</style>
+{{/section}}
+
+<h4>{{data.reportName}}</h4>
+
+<table class="table table-bordered table-sm">
+    <thead>
+        <tr>
+            <th>{{data.headers.kpiNameCell.name}}</th>
+            {{#each data.headers.dimensions}}
+            <th>{{fieldId}}</th>
+            {{/each}}
+            {{#each data.headers.valuesv1}}
+            <th>{{colLevel}}</th>
+            {{/each}}
+        </tr>
+    </thead>
+
+    <tbody>
+        {{#each data.rows}}
+        <tr>
+            <td>
+                {{kpiNameCell.name}}
+            </td>
+            {{#each dimensions}}
+            <td>
+                {{rowDim}}
+            </td>
+            {{/each}}
+            {{#each valuesv1}}
+            <td>
+                {{measure}}
+            </td>
+            {{/each}}
+        </tr>
+        {{/each}}
+    </tbody>
+</table>

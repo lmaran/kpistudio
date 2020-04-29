@@ -42,8 +42,8 @@ exports.getHomePage = async (req, res) => {
     });
 
     let headers = {};
-    headers["kpi-name"] = [{ name: "KPI" }];
-    headers["dimensions"] = rowDimensions.map(dim => dim);
+    headers.kpiNameCell = { name: "KPI" };
+    headers.dimensions = rowDimensions.map(dim => dim);
     let rowsWithFlatColumns = [];
 
     kpiVariants.forEach(kpiVariant => {
@@ -58,34 +58,34 @@ exports.getHomePage = async (req, res) => {
             addTreeObjectsToListRecursively(kv0, unsortedHeaderList);
         });
 
-        unsortedHeaderList.push({
-            //measure: 3333,
-            colLevel: 3,
-            colDim1: 2018,
-            colDim2: 201803,
-            colDim3: 201808
-        });
+        // unsortedHeaderList.push({
+        //     //measure: 3333,
+        //     colLevel: 3,
+        //     colDim1: 2018,
+        //     colDim2: 201803,
+        //     colDim3: 201808
+        // });
 
-        unsortedHeaderList.push({
-            //measure: 2222,
-            colLevel: 2,
-            colDim1: 2018,
-            colDim2: 201803
-        });
+        // unsortedHeaderList.push({
+        //     //measure: 2222,
+        //     colLevel: 2,
+        //     colDim1: 2018,
+        //     colDim2: 201803
+        // });
 
-        unsortedHeaderList.push({
-            //measure: 1111,
-            colLevel: 1,
-            colDim1: 2018
-        });
+        // unsortedHeaderList.push({
+        //     //measure: 1111,
+        //     colLevel: 1,
+        //     colDim1: 2018
+        // });
 
-        unsortedHeaderList.push({
-            //measure: 3333,
-            colLevel: 3,
-            colDim1: 2018,
-            colDim2: 201803,
-            colDim3: 201807
-        });
+        // unsortedHeaderList.push({
+        //     //measure: 3333,
+        //     colLevel: 3,
+        //     colDim1: 2018,
+        //     colDim2: 201803,
+        //     colDim3: 201807
+        // });
 
         // const sortedHeaderColumns = sortHeaderColumns(unsortedHeaderList);
 
@@ -96,44 +96,62 @@ exports.getHomePage = async (req, res) => {
         let sortedHeaderList = [{ colLevel: 0 }];
         addTreeObjectsToListRecursively(sortedHeaderTree, sortedHeaderList);
 
-        headers[`values-${kpiVariant.kpiVariantId}`] = sortedHeaderList;
+        headers[`values${kpiVariant.kpiVariantId}`] = sortedHeaderList;
         //headers[`sortedHeaderList`] = sortedHeaderList;
 
         // add flat values to each row
         let variantRows = rows.filter(x => x.kpiVariant === kpiVariant.kpiVariantId);
         variantRows.forEach(row => {
-            row[`values-${kpiVariant.kpiVariantId}`] = getSortedRowValuesList(row, sortedHeaderList);
+            row.kpiNameCell = getRowKpiNameCell(row, kpis);
+            row.dimensions = getRowDimensions(row, totalRowDimension);
+            row[`values${kpiVariant.kpiVariantId}`] = getSortedRowValuesList(row, sortedHeaderList);
             delete row.documents; // no longer needed
             // row[`documents`] = getSortedRowValuesList(row, sortedHeaderList); // overwrite as no longer needed
-
-            row.dimensions = getRowDimensions(row, totalRowDimension);
         });
     });
 
     let data = {
+        reportName: "Sales profitability",
         headers,
         rows
         //mongoData
     };
 
-    res.send(data);
-    // res.render("home", { data, layout: false });
+    // res.send(data);
+    res.render("home", { data, layout2: false });
+};
+
+const getRowKpiNameCell = (row, kpis) => {
+    let kpiNameCell = {};
+    if (row.rowLevel === 0) {
+        const kpi = kpis.find(x => x.kpiId === row.kpi);
+        kpiNameCell.name = kpi.displayName;
+    }
+    return kpiNameCell;
 };
 
 const getRowDimensions = (row, totalRowDimension) => {
-    let rowDimensions = [];
-    // headerDimensions.forEach(headerDimension => {
+    // Example:
 
-    // });
+    // let in_totalRowDimension = 3;
+
+    // let in_row = {
+    //     rowLevel: 2,
+    //     rowDim1: "b1",
+    //     rowDim2: "c1",
+    //     // other props
+    // };
+
+    // let out_rowDimensions = [{}, { rowDim: "c1" }, {}];
+
+    let rowDimensions = [];
 
     for (let i = 1; i <= totalRowDimension; i++) {
         let elem = {};
-        // for (let j = 1; j <= row.rowLevel; j++, i++) {
-        //     elem.rowDim = row[`rowDim${j}`];
-        //     rowDimensions.push(elem);
-        // }
-        elem.rowDim = i;
 
+        if (row.rowLevel === i) {
+            elem.rowDim = row[`rowDim${row.rowLevel}`];
+        }
         rowDimensions.push(elem);
     }
     return rowDimensions;
@@ -156,7 +174,7 @@ const getSortedRowValuesList = (sourceTreeParent, sortedHeaderList) => {
         if (foundValue) {
             sortedRowValuesList.push(foundValue);
         } else {
-            headerValue.measure = -1; //TODO: set it to 0
+            headerValue.measure = 0; //TODO: set it to 0
             sortedRowValuesList.push(headerValue);
         }
     });
