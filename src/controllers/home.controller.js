@@ -15,11 +15,11 @@ exports.getHomePage = async (req, res) => {
     var kpiVariants = reportDefinition.reportColumns.filter(x => x.type === "kpi-variant");
 
     let rowDimensions = reportDefinition.rowDimensions;
-    let totalRowDimension = rowDimensions.length;
-    // const totalRowLevels = totalRowDimension + 1;
+    let totalRowDimensions = rowDimensions.length;
+    // const totalRowLevels = totalRowDimensions + 1;
 
     let columnDimensions = reportDefinition.columnDimensions;
-    let totalColumnDimension = columnDimensions.length;
+    let totalColumnDimensions = columnDimensions.length;
 
     var kpis = reportDefinition.reportLines.filter(x => x.type === "kpi");
     totalKpis = kpis.length;
@@ -37,7 +37,7 @@ exports.getHomePage = async (req, res) => {
             const kv0 = kv0s[0];
             rows.push(kv0);
 
-            addRowsRecursively(kv0, totalRowDimension, mongoDataAsObj, kpi, kpiVariant, rows);
+            addRowsRecursively(kv0, totalRowDimensions, mongoDataAsObj, kpi, kpiVariant, rows);
         });
     });
 
@@ -95,30 +95,249 @@ exports.getHomePage = async (req, res) => {
 
         let sortedHeaderList = [{ colLevel: 0 }];
         addTreeObjectsToListRecursively(sortedHeaderTree, sortedHeaderList);
+        headers[`sortedHeaderList`] = sortedHeaderList;
+
+        const headersWithDetails = getHeadersWithDetails(sortedHeaderList, totalColumnDimensions);
+        headers[`headersWithDetails`] = headersWithDetails;
 
         headers[`values${kpiVariant.kpiVariantId}`] = sortedHeaderList;
-        //headers[`sortedHeaderList`] = sortedHeaderList;
 
         // add flat values to each row
         let variantRows = rows.filter(x => x.kpiVariant === kpiVariant.kpiVariantId);
         variantRows.forEach(row => {
             row.kpiNameCell = getRowKpiNameCell(row, kpis);
-            row.dimensions = getRowDimensions(row, totalRowDimension);
+            row.dimensions = getRowDimensions(row, totalRowDimensions);
             row[`values${kpiVariant.kpiVariantId}`] = getSortedRowValuesList(row, sortedHeaderList);
             delete row.documents; // no longer needed
             // row[`documents`] = getSortedRowValuesList(row, sortedHeaderList); // overwrite as no longer needed
         });
     });
 
+    let headerRows = [];
+    for (let i = 1; i <= totalRowDimensions; i++) {
+        let row = {};
+        row.kpiNameCell = { name: "KPI", rowspan: totalRowDimensions + 1, colspan: 1 };
+        row.dimensions = rowDimensions.map(dim => {
+            dim.rowspan = totalRowDimensions + 1;
+            dim.colspan = 1;
+            return dim;
+        });
+        headerRows.push(row);
+    }
+
     let data = {
         reportName: "Sales profitability",
         headers,
+        headerRows,
         rows
+
         //mongoData
     };
 
-    // res.send(data);
+    //res.send(data);
     res.render("home", { data, layout2: false });
+};
+
+const getHeadersWithDetails = (sortedHeaderList, totalColumnDimensions) => {
+    // loop through the array and enrich each element with:
+    // 1. descendants (useful for "colspan"); for "rowspan" we use "colLevel"
+    // 2. value ( = `colDim${colLevel}`)
+
+    // Example:
+    let in_sortedHeaderList = [
+        {
+            colLevel: 0
+        },
+        {
+            colLevel: 1,
+            colDim1: 2019
+        },
+        {
+            colLevel: 2,
+            colDim1: 2019,
+            colDim2: 201901
+        },
+        {
+            colLevel: 3,
+            colDim1: 2019,
+            colDim2: 201901,
+            colDim3: 201901
+        },
+        {
+            colLevel: 3,
+            colDim1: 2019,
+            colDim2: 201901,
+            colDim3: 201902
+        },
+        {
+            colLevel: 3,
+            colDim1: 2019,
+            colDim2: 201901,
+            colDim3: 201903
+        },
+        {
+            colLevel: 2,
+            colDim1: 2019,
+            colDim2: 201902
+        },
+        {
+            colLevel: 3,
+            colDim1: 2019,
+            colDim2: 201902,
+            colDim3: 201904
+        },
+        {
+            colLevel: 1,
+            colDim1: 2020
+        },
+        {
+            colLevel: 2,
+            colDim1: 2020,
+            colDim2: 202001
+        },
+        {
+            colLevel: 3,
+            colDim1: 2020,
+            colDim2: 202001,
+            colDim3: 202001
+        },
+        {
+            colLevel: 3,
+            colDim1: 2020,
+            colDim2: 202001,
+            colDim3: 202002
+        }
+    ];
+
+    let out_headersWithDetails = [
+        {
+            colLevel: 0,
+            descendants: 11,
+            value: "Values / Total values"
+        },
+        {
+            colLevel: 1,
+            colDim1: 2019,
+            descendants: 6,
+            value: "2019"
+        },
+        {
+            colLevel: 2,
+            colDim1: 2019,
+            colDim2: 201901,
+            descendants: 3,
+            value: "201901"
+        },
+        {
+            colLevel: 3,
+            colDim1: 2019,
+            colDim2: 201901,
+            colDim3: 201901,
+            descendants: 0,
+            value: "201901"
+        },
+        {
+            colLevel: 3,
+            colDim1: 2019,
+            colDim2: 201901,
+            colDim3: 201902,
+            descendants: 0,
+            value: "201902"
+        },
+        {
+            colLevel: 3,
+            colDim1: 2019,
+            colDim2: 201901,
+            colDim3: 201903,
+            descendants: 0,
+            values: "201903"
+        },
+        {
+            colLevel: 2,
+            colDim1: 2019,
+            colDim2: 201902,
+            descendants: 1,
+            values: "201902"
+        },
+        {
+            colLevel: 3,
+            colDim1: 2019,
+            colDim2: 201902,
+            colDim3: 201904,
+            descendants: 0,
+            values: "201904"
+        },
+        {
+            colLevel: 1,
+            colDim1: 2020,
+            descendants: 3,
+            values: "2020"
+        },
+        {
+            colLevel: 2,
+            colDim1: 2020,
+            colDim2: 202001,
+            descendants: 2,
+            values: "202001"
+        },
+        {
+            colLevel: 3,
+            colDim1: 2020,
+            colDim2: 202001,
+            colDim3: 202001,
+            descendants: 0,
+            values: "202001"
+        },
+        {
+            colLevel: 3,
+            colDim1: 2020,
+            colDim2: 202001,
+            colDim3: 202002,
+            descendants: 0,
+            values: "202002"
+        }
+    ];
+
+    // init a counter for each column level
+    let counterObj = {};
+    for (let i = 0; i <= totalColumnDimensions; i++) {
+        counterObj[`counterLevel${i}`] = 0;
+    }
+
+    // loop through the array backwards and update counters and elem.descendants
+    for (let i = sortedHeaderList.length - 1; i >= 0; i--) {
+        let elem = sortedHeaderList[i];
+
+        // update elem.descendants
+        elem.descendants = counterObj[`counterLevel${elem.colLevel}`];
+
+        // update counters
+        for (let k = 0; k <= totalColumnDimensions; k++) {
+            if (k < elem.colLevel) {
+                counterObj[`counterLevel${k}`]++;
+            } else {
+                counterObj[`counterLevel${k}`] = 0;
+            }
+        }
+
+        // add rowspan, colspan
+        elem.rowspan = totalColumnDimensions - elem.colLevel || 1; // last level has rowspan = 1 instead of 0
+        elem.colspan = elem.descendants + 1;
+
+        // add value
+        elem.value = "";
+        if (elem.colLevel === 0) {
+            if (totalColumnDimensions === 0) {
+                elem.value = "Values"; // TODO add also the KPI variant name (if there are many)
+            } else {
+                elem.value = "Total values";
+            }
+        } else {
+            elem.value = elem[`colDim${elem.colLevel}`].toString();
+        }
+    }
+
+    return sortedHeaderList;
 };
 
 const getRowKpiNameCell = (row, kpis) => {
@@ -130,10 +349,10 @@ const getRowKpiNameCell = (row, kpis) => {
     return kpiNameCell;
 };
 
-const getRowDimensions = (row, totalRowDimension) => {
+const getRowDimensions = (row, totalRowDimensions) => {
     // Example:
 
-    // let in_totalRowDimension = 3;
+    // let in_totalRowDimensions = 3;
 
     // let in_row = {
     //     rowLevel: 2,
@@ -146,7 +365,7 @@ const getRowDimensions = (row, totalRowDimension) => {
 
     let rowDimensions = [];
 
-    for (let i = 1; i <= totalRowDimension; i++) {
+    for (let i = 1; i <= totalRowDimensions; i++) {
         let elem = {};
 
         if (row.rowLevel === i) {
@@ -394,10 +613,10 @@ const addTreeObjectsToListRecursively = (sourceTreeParent, targetList, copyMeasu
     }
 };
 
-const addRowsRecursively = (parentKv, totalRowDimension, mongoDataAsObj, kpi, kpiVariant, rows) => {
+const addRowsRecursively = (parentKv, totalRowDimensions, mongoDataAsObj, kpi, kpiVariant, rows) => {
     const curentRowLevel = parentKv.rowLevel + 1;
 
-    if (curentRowLevel <= totalRowDimension) {
+    if (curentRowLevel <= totalRowDimensions) {
         let childKvs = mongoDataAsObj[`${kpi.kpiId}-${kpiVariant.kpiVariantId}-row-level-${curentRowLevel}`];
 
         if (curentRowLevel >= 2) {
@@ -413,7 +632,7 @@ const addRowsRecursively = (parentKv, totalRowDimension, mongoDataAsObj, kpi, kp
         childKvs.forEach(childKv => {
             rows.push(childKv);
 
-            addRowsRecursively(childKv, totalRowDimension, mongoDataAsObj, kpi, kpiVariant, rows);
+            addRowsRecursively(childKv, totalRowDimensions, mongoDataAsObj, kpi, kpiVariant, rows);
         });
     }
 };
