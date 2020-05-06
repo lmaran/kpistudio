@@ -1,0 +1,528 @@
+{
+    "k2-v1-row-level-3": [
+        {
+            "measure": NumberInt(2),
+            "docs": ["1", "17"],
+            "documents": [
+                {
+                    "colLevel": 1.0,
+                    "measure": NumberInt(1),
+                    "documents": [
+                        {
+                            "colLevel": 2.0,
+                            "measure": NumberInt(1),
+                            "documents": [
+                                {
+                                    "colLevel": 3.0,
+                                    "measure": NumberInt(1),
+                                    "colDim1": NumberInt(2019),
+                                    "colDim2": NumberInt(201901),
+                                    "colDim3": NumberInt(201901)
+                                }
+                            ],
+                            "colDim1": NumberInt(2019),
+                            "colDim2": NumberInt(201901)
+                        }
+                    ],
+                    "colDim1": NumberInt(2019)
+                },
+                {
+                    "colLevel": 1.0,
+                    "measure": NumberInt(1),
+                    "documents": [
+                        {
+                            "colLevel": 2.0,
+                            "measure": NumberInt(1),
+                            "documents": [
+                                {
+                                    "colLevel": 3.0,
+                                    "measure": NumberInt(1),
+                                    "colDim1": NumberInt(2020),
+                                    "colDim2": NumberInt(202001),
+                                    "colDim3": NumberInt(202001)
+                                }
+                            ],
+                            "colDim1": NumberInt(2020),
+                            "colDim2": NumberInt(202001)
+                        }
+                    ],
+                    "colDim1": NumberInt(2020)
+                }
+            ],
+            "rowDim1": "b1",
+            "rowDim2": "c1",
+            "rowDim3": "Product1",
+            "kpi": "k2",
+            "kpiVariant": "v1",
+            "rowLevel": 3.0,
+            "colLevel": 0.0
+        },
+        {
+            "measure": NumberInt(3),
+            "docs": ["1", "17", "2"],
+            "documents": [
+                {
+                    "colLevel": 1.0,
+                    "measure": NumberInt(2),
+                    "documents": [
+                        {
+                            "colLevel": 2.0,
+                            "measure": NumberInt(2),
+                            "documents": [
+                                {
+                                    "colLevel": 3.0,
+                                    "measure": NumberInt(2),
+                                    "colDim1": NumberInt(2019),
+                                    "colDim2": NumberInt(201901),
+                                    "colDim3": NumberInt(201901)
+                                }
+                            ],
+                            "colDim1": NumberInt(2019),
+                            "colDim2": NumberInt(201901)
+                        }
+                    ],
+                    "colDim1": NumberInt(2019)
+                },
+                {
+                    "colLevel": 1.0,
+                    "measure": NumberInt(1),
+                    "documents": [
+                        {
+                            "colLevel": 2.0,
+                            "measure": NumberInt(1),
+                            "documents": [
+                                {
+                                    "colLevel": 3.0,
+                                    "measure": NumberInt(1),
+                                    "colDim1": NumberInt(2020),
+                                    "colDim2": NumberInt(202001),
+                                    "colDim3": NumberInt(202001)
+                                }
+                            ],
+                            "colDim1": NumberInt(2020),
+                            "colDim2": NumberInt(202001)
+                        }
+                    ],
+                    "colDim1": NumberInt(2020)
+                }
+            ],
+            "rowDim1": "b1",
+            "rowDim2": "c1",
+            "rowDim3": "Product3",
+            "kpi": "k2",
+            "kpiVariant": "v1",
+            "rowLevel": 3.0,
+            "colLevel": 0.0
+        },
+        {
+            "measure": NumberInt(4),
+            "docs": ["15", "19", "3", "4"],
+            "documents": [
+                {
+                    "colLevel": 1.0,
+                    "measure": NumberInt(3),
+                    "documents": [
+                        {
+                            "colLevel": 2.0,
+                            "measure": NumberInt(2),
+                            "documents": [
+                                {
+                                    "colLevel": 3.0,
+                                    "measure": NumberInt(1),
+                                    "colDim1": NumberInt(2019),
+                                    "colDim2": NumberInt(201901),
+                                    "colDim3": NumberInt(201902)
+                                },
+                                {
+                                    "colLevel": 3.0,
+                                    "measure": NumberInt(1),
+                                    "colDim1": NumberInt(2019),
+                                    "colDim2": NumberInt(201901),
+                                    "colDim3": NumberInt(201903)
+                                }
+                            ],
+                            "colDim1": NumberInt(2019),
+                            "colDim2": NumberInt(201901)
+                        },
+                        {
+                            "colLevel": 2.0,
+                            "measure": NumberInt(1),
+                            "documents": [
+                                {
+                                    "colLevel": 3.0,
+                                    "measure": NumberInt(1),
+                                    "colDim1": NumberInt(2019),
+                                    "colDim2": NumberInt(201902),
+                                    "colDim3": NumberInt(201904)
+                                }
+                            ],
+                            "colDim1": NumberInt(2019),
+                            "colDim2": NumberInt(201902)
+                        }
+                    ],
+                    "colDim1": NumberInt(2019)
+                },
+                {
+                    "colLevel": 1.0,
+                    "measure": NumberInt(1),
+                    "documents": [
+                        {
+                            "colLevel": 2.0,
+                            "measure": NumberInt(1),
+                            "documents": [
+                                {
+                                    "colLevel": 3.0,
+                                    "measure": NumberInt(1),
+                                    "colDim1": NumberInt(2020),
+                                    "colDim2": NumberInt(202001),
+                                    "colDim3": NumberInt(202002)
+                                }
+                            ],
+                            "colDim1": NumberInt(2020),
+                            "colDim2": NumberInt(202001)
+                        }
+                    ],
+                    "colDim1": NumberInt(2020)
+                }
+            ],
+            "rowDim1": "b1",
+            "rowDim2": "c1",
+            "rowDim3": "Product5",
+            "kpi": "k2",
+            "kpiVariant": "v1",
+            "rowLevel": 3.0,
+            "colLevel": 0.0
+        },
+        {
+            "measure": NumberInt(2),
+            "docs": ["16", "6"],
+            "documents": [
+                {
+                    "colLevel": 1.0,
+                    "measure": NumberInt(2),
+                    "documents": [
+                        {
+                            "colLevel": 2.0,
+                            "measure": NumberInt(1),
+                            "documents": [
+                                {
+                                    "colLevel": 3.0,
+                                    "measure": NumberInt(1),
+                                    "colDim1": NumberInt(2019),
+                                    "colDim2": NumberInt(201901),
+                                    "colDim3": NumberInt(201903)
+                                }
+                            ],
+                            "colDim1": NumberInt(2019),
+                            "colDim2": NumberInt(201901)
+                        },
+                        {
+                            "colLevel": 2.0,
+                            "measure": NumberInt(1),
+                            "documents": [
+                                {
+                                    "colLevel": 3.0,
+                                    "measure": NumberInt(1),
+                                    "colDim1": NumberInt(2019),
+                                    "colDim2": NumberInt(201902),
+                                    "colDim3": NumberInt(201904)
+                                }
+                            ],
+                            "colDim1": NumberInt(2019),
+                            "colDim2": NumberInt(201902)
+                        }
+                    ],
+                    "colDim1": NumberInt(2019)
+                }
+            ],
+            "rowDim1": "b1",
+            "rowDim2": "c2",
+            "rowDim3": "Product1",
+            "kpi": "k2",
+            "kpiVariant": "v1",
+            "rowLevel": 3.0,
+            "colLevel": 0.0
+        },
+        {
+            "measure": NumberInt(1),
+            "docs": ["5"],
+            "documents": [
+                {
+                    "colLevel": 1.0,
+                    "measure": NumberInt(1),
+                    "documents": [
+                        {
+                            "colLevel": 2.0,
+                            "measure": NumberInt(1),
+                            "documents": [
+                                {
+                                    "colLevel": 3.0,
+                                    "measure": NumberInt(1),
+                                    "colDim1": NumberInt(2019),
+                                    "colDim2": NumberInt(201901),
+                                    "colDim3": NumberInt(201901)
+                                }
+                            ],
+                            "colDim1": NumberInt(2019),
+                            "colDim2": NumberInt(201901)
+                        }
+                    ],
+                    "colDim1": NumberInt(2019)
+                }
+            ],
+            "rowDim1": "b1",
+            "rowDim2": "c2",
+            "rowDim3": "Product5",
+            "kpi": "k2",
+            "kpiVariant": "v1",
+            "rowLevel": 3.0,
+            "colLevel": 0.0
+        },
+        {
+            "measure": NumberInt(2),
+            "docs": ["18", "7"],
+            "documents": [
+                {
+                    "colLevel": 1.0,
+                    "measure": NumberInt(1),
+                    "documents": [
+                        {
+                            "colLevel": 2.0,
+                            "measure": NumberInt(1),
+                            "documents": [
+                                {
+                                    "colLevel": 3.0,
+                                    "measure": NumberInt(1),
+                                    "colDim1": NumberInt(2019),
+                                    "colDim2": NumberInt(201901),
+                                    "colDim3": NumberInt(201901)
+                                }
+                            ],
+                            "colDim1": NumberInt(2019),
+                            "colDim2": NumberInt(201901)
+                        }
+                    ],
+                    "colDim1": NumberInt(2019)
+                },
+                {
+                    "colLevel": 1.0,
+                    "measure": NumberInt(1),
+                    "documents": [
+                        {
+                            "colLevel": 2.0,
+                            "measure": NumberInt(1),
+                            "documents": [
+                                {
+                                    "colLevel": 3.0,
+                                    "measure": NumberInt(1),
+                                    "colDim1": NumberInt(2020),
+                                    "colDim2": NumberInt(202001),
+                                    "colDim3": NumberInt(202001)
+                                }
+                            ],
+                            "colDim1": NumberInt(2020),
+                            "colDim2": NumberInt(202001)
+                        }
+                    ],
+                    "colDim1": NumberInt(2020)
+                }
+            ],
+            "rowDim1": "b1",
+            "rowDim2": "c3",
+            "rowDim3": "Product2",
+            "kpi": "k2",
+            "kpiVariant": "v1",
+            "rowLevel": 3.0,
+            "colLevel": 0.0
+        },
+        {
+            "measure": NumberInt(1),
+            "docs": ["8"],
+            "documents": [
+                {
+                    "colLevel": 1.0,
+                    "measure": NumberInt(1),
+                    "documents": [
+                        {
+                            "colLevel": 2.0,
+                            "measure": NumberInt(1),
+                            "documents": [
+                                {
+                                    "colLevel": 3.0,
+                                    "measure": NumberInt(1),
+                                    "colDim1": NumberInt(2019),
+                                    "colDim2": NumberInt(201901),
+                                    "colDim3": NumberInt(201902)
+                                }
+                            ],
+                            "colDim1": NumberInt(2019),
+                            "colDim2": NumberInt(201901)
+                        }
+                    ],
+                    "colDim1": NumberInt(2019)
+                }
+            ],
+            "rowDim1": "b1",
+            "rowDim2": "c3",
+            "rowDim3": "Product5",
+            "kpi": "k2",
+            "kpiVariant": "v1",
+            "rowLevel": 3.0,
+            "colLevel": 0.0
+        },
+        {
+            "measure": NumberInt(1),
+            "docs": ["9"],
+            "documents": [
+                {
+                    "colLevel": 1.0,
+                    "measure": NumberInt(1),
+                    "documents": [
+                        {
+                            "colLevel": 2.0,
+                            "measure": NumberInt(1),
+                            "documents": [
+                                {
+                                    "colLevel": 3.0,
+                                    "measure": NumberInt(1),
+                                    "colDim1": NumberInt(2019),
+                                    "colDim2": NumberInt(201901),
+                                    "colDim3": NumberInt(201901)
+                                }
+                            ],
+                            "colDim1": NumberInt(2019),
+                            "colDim2": NumberInt(201901)
+                        }
+                    ],
+                    "colDim1": NumberInt(2019)
+                }
+            ],
+            "rowDim1": "b2",
+            "rowDim2": "c2",
+            "rowDim3": "Product3",
+            "kpi": "k2",
+            "kpiVariant": "v1",
+            "rowLevel": 3.0,
+            "colLevel": 0.0
+        },
+        {
+            "measure": NumberInt(2),
+            "docs": ["10", "11"],
+            "documents": [
+                {
+                    "colLevel": 1.0,
+                    "measure": NumberInt(2),
+                    "documents": [
+                        {
+                            "colLevel": 2.0,
+                            "measure": NumberInt(2),
+                            "documents": [
+                                {
+                                    "colLevel": 3.0,
+                                    "measure": NumberInt(1),
+                                    "colDim1": NumberInt(2019),
+                                    "colDim2": NumberInt(201901),
+                                    "colDim3": NumberInt(201902)
+                                },
+                                {
+                                    "colLevel": 3.0,
+                                    "measure": NumberInt(1),
+                                    "colDim1": NumberInt(2019),
+                                    "colDim2": NumberInt(201901),
+                                    "colDim3": NumberInt(201903)
+                                }
+                            ],
+                            "colDim1": NumberInt(2019),
+                            "colDim2": NumberInt(201901)
+                        }
+                    ],
+                    "colDim1": NumberInt(2019)
+                }
+            ],
+            "rowDim1": "b2",
+            "rowDim2": "c2",
+            "rowDim3": "Product5",
+            "kpi": "k2",
+            "kpiVariant": "v1",
+            "rowLevel": 3.0,
+            "colLevel": 0.0
+        },
+        {
+            "measure": NumberInt(2),
+            "docs": ["12", "14"],
+            "documents": [
+                {
+                    "colLevel": 1.0,
+                    "measure": NumberInt(2),
+                    "documents": [
+                        {
+                            "colLevel": 2.0,
+                            "measure": NumberInt(2),
+                            "documents": [
+                                {
+                                    "colLevel": 3.0,
+                                    "measure": NumberInt(1),
+                                    "colDim1": NumberInt(2019),
+                                    "colDim2": NumberInt(201901),
+                                    "colDim3": NumberInt(201901)
+                                },
+                                {
+                                    "colLevel": 3.0,
+                                    "measure": NumberInt(1),
+                                    "colDim1": NumberInt(2019),
+                                    "colDim2": NumberInt(201901),
+                                    "colDim3": NumberInt(201903)
+                                }
+                            ],
+                            "colDim1": NumberInt(2019),
+                            "colDim2": NumberInt(201901)
+                        }
+                    ],
+                    "colDim1": NumberInt(2019)
+                }
+            ],
+            "rowDim1": "b2",
+            "rowDim2": "c4",
+            "rowDim3": "Product1",
+            "kpi": "k2",
+            "kpiVariant": "v1",
+            "rowLevel": 3.0,
+            "colLevel": 0.0
+        },
+        {
+            "measure": NumberInt(1),
+            "docs": ["13"],
+            "documents": [
+                {
+                    "colLevel": 1.0,
+                    "measure": NumberInt(1),
+                    "documents": [
+                        {
+                            "colLevel": 2.0,
+                            "measure": NumberInt(1),
+                            "documents": [
+                                {
+                                    "colLevel": 3.0,
+                                    "measure": NumberInt(1),
+                                    "colDim1": NumberInt(2019),
+                                    "colDim2": NumberInt(201901),
+                                    "colDim3": NumberInt(201902)
+                                }
+                            ],
+                            "colDim1": NumberInt(2019),
+                            "colDim2": NumberInt(201901)
+                        }
+                    ],
+                    "colDim1": NumberInt(2019)
+                }
+            ],
+            "rowDim1": "b2",
+            "rowDim2": "c4",
+            "rowDim3": "Product2",
+            "kpi": "k2",
+            "kpiVariant": "v1",
+            "rowLevel": 3.0,
+            "colLevel": 0.0
+        }
+    ]
+}

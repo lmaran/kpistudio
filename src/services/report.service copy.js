@@ -35,18 +35,19 @@ exports.getReportTest = async () => {
                 let facetPipeline = [{ $match: kpi.filter || {} }, { $match: kpiVariant.filter || {} }];
 
                 // ex: { dim1: "$branch-id", dim2: "$customer-id" }
-                let addDimFields = {};
+                let addFields = {};
                 rowDimensions.forEach((dim, idx) => {
-                    addDimFields[`rowDim${idx + 1}`] = `$${dim.fieldId}`;
+                    addFields[`rowDim${idx + 1}`] = `$${dim.fieldId}`;
                 });
                 columnDimensions.forEach((dim, idx) => {
-                    addDimFields[`colDim${idx + 1}`] = `$${dim.fieldId}`;
+                    addFields[`colDim${idx + 1}`] = `$${dim.fieldId}`;
                 });
-                facetPipeline.push({ $addFields: addDimFields });
+                addFields[`measure`] = `$${kpi.kpiFormula}`;
+                facetPipeline.push({ $addFields: addFields });
 
-                facetPipeline.push({ $addFields: { measure: `$${kpi.kpiFormula}` } });
+                //facetPipeline.push({ $addFields: { measure: `$${kpi.kpiFormula}` } });
 
-                // // group by unique documents (additional stage)
+                // group by unique documents (additional stage)
                 // if (kpi.summarizeBy === "COUNTDISTINCT") {
                 //     let group = {
                 //         _id: `$${kpi.kpiFormula}` // document-number-id,
@@ -62,6 +63,41 @@ exports.getReportTest = async () => {
                 // }
 
                 for (let colLevel = totalColumnDimension; colLevel >= 0; colLevel--) {
+                    // // start group by dims
+                    // if (kpi.summarizeBy === "COUNTDISTINCT") {
+                    //     let groupByDims2 = {};
+
+                    //     for (let j = 1; j <= rowLevel; j++) {
+                    //         groupByDims2[`rowDim${j}`] = `$rowDim${j}`;
+                    //     }
+                    //     for (let j = 1; j <= colLevel; j++) {
+                    //         groupByDims2[`colDim${j}`] = `$colDim${j}`;
+                    //     }
+                    //     groupByDims2[`docDim`] = `$${kpi.kpiFormula}`;
+
+                    //     for (let j = 1; j <= totalRowDimension; j++) {
+                    //         groupByDims2[`rowDim${j}`] = { $max: `$rowDim${j}` };
+                    //     }
+                    //     for (let j = 1; j <= totalColumnDimension; j++) {
+                    //         groupByDims2[`colDim${j}`] = { $max: `$colDim${j}` };
+                    //     }
+
+                    //     let group2 = { _id: groupByDims2, measure: { $sum: 1 } };
+
+                    //     facetPipeline.push({ $group: group2 });
+
+                    //     // expose dim fields"
+                    //     let addFields2 = {};
+                    //     for (let j = 1; j <= totalRowDimension; j++) {
+                    //         addFields2[`rowDim${j}`] = `$_id.rowDim${j}`;
+                    //     }
+                    //     for (let j = 1; j <= totalColumnDimension; j++) {
+                    //         addFields2[`colDim${j}`] = `$_id.colDim${j}`;
+                    //     }
+                    //     facetPipeline.push({ $addFields: addFields2 });
+                    // }
+                    // // end group by docs
+
                     let groupByDims = {};
 
                     // 1. _id
@@ -90,15 +126,6 @@ exports.getReportTest = async () => {
 
                     let group = { _id: groupByDims, measure };
 
-                    // COUNTDISTINCT
-                    if (kpi.summarizeBy === "COUNTDISTINCT") {
-                        if (colLevel === totalColumnDimension) {
-                            group["docs"] = { $addToSet: `$${kpi.kpiFormula}` }; // array of strings: document-number-id,
-                        } else {
-                            group["docs"] = { $push: "$docs" }; // array of arrays
-                        }
-                    }
-
                     // 3. documents
                     if (colLevel !== totalColumnDimension) {
                         let pushObj = {
@@ -119,20 +146,6 @@ exports.getReportTest = async () => {
                     // group
                     facetPipeline.push({ $group: group });
 
-                    if (kpi.summarizeBy === "COUNTDISTINCT" && colLevel !== totalColumnDimension) {
-                        facetPipeline.push({
-                            $addFields: {
-                                docs: {
-                                    $reduce: {
-                                        input: "$docs",
-                                        initialValue: [],
-                                        in: { $setUnion: ["$$value", "$$this"] }
-                                    }
-                                }
-                            }
-                        });
-                    }
-
                     // expose dim fields"
                     let addFields = {};
                     for (let j = 1; j <= totalRowDimension; j++) {
@@ -141,15 +154,25 @@ exports.getReportTest = async () => {
                     for (let j = 1; j <= totalColumnDimension; j++) {
                         addFields[`colDim${j}`] = `$_id.colDim${j}`;
                     }
-
-                    if (kpi.summarizeBy === "COUNTDISTINCT") {
-                        // overwrite standard measures
-                        addFields["measure"] = { $size: "$docs" };
-                    }
-
                     facetPipeline.push({ $addFields: addFields });
 
                     // sort
+                    // const currentColDimension = columnDimensions[colLevel - 1];
+
+                    // console.log(currentColDimension);
+                    // console.log(group._id);
+
+                    // const sort = {};
+
+                    // sort[`_id.r_dim1`] = 1;
+                    // sort[`_id.r_dim2`] = 1;
+                    // sort[`_id.r_dim3`] = 1;
+                    // sort[`_id.c_dim1`] = 1;
+                    // sort[`_id.c_dim2`] = 1;
+                    // sort[`_id.c_dim3`] = -1;
+
+                    // facetPipeline.push({ $sort: sort });
+
                     facetPipeline.push({ $sort: { _id: 1 } });
 
                     // add first-level fields & the final project
@@ -164,7 +187,7 @@ exports.getReportTest = async () => {
                             addFields[`rowDim${j}`] = `$_id.rowDim${j}`;
                         }
                         facetPipeline.push({ $addFields: addFields });
-                        facetPipeline.push({ $project: { _id: 0, docs: 0 } });
+                        facetPipeline.push({ $project: { _id: 0 } });
                     }
                 }
 
@@ -181,13 +204,6 @@ exports.getReportTest = async () => {
     const pipeline = [{ $match: reportDefinition.filters || {} }, { $facet: facetsObj }];
     console.dir(pipeline, { depth: null });
     console.log("-----------------------------------------");
-    console.log(".");
-    console.log(".");
-    console.log(".");
-    console.log(".");
-    console.log(".");
-    console.log(".");
-    console.log(".");
 
     return db
         .collection(reportDataCollection)
