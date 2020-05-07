@@ -34,7 +34,6 @@ exports.getReportTest = async () => {
             for (let rowLevel = totalRowDimension; rowLevel >= 0; rowLevel--) {
                 let facetPipeline = [{ $match: kpi.filter || {} }, { $match: kpiVariant.filter || {} }];
 
-                // ex: { dim1: "$branch-id", dim2: "$customer-id" }
                 let addDimFields = {};
                 rowDimensions.forEach((dim, idx) => {
                     addDimFields[`rowDim${idx + 1}`] = `$${dim.fieldId}`;
@@ -46,22 +45,36 @@ exports.getReportTest = async () => {
 
                 facetPipeline.push({ $addFields: { measure: `$${kpi.kpiFormula}` } });
 
-                // // group by unique documents (additional stage)
-                // if (kpi.summarizeBy === "COUNTDISTINCT") {
-                //     let group = {
-                //         _id: `$${kpi.kpiFormula}` // document-number-id,
-                //     };
-
-                //     for (let j = 1; j <= totalRowDimension; j++) {
-                //         group[`rowDim${j}`] = { $max: `$rowDim${j}` };
-                //     }
-                //     for (let j = 1; j <= totalColumnDimension; j++) {
-                //         group[`colDim${j}`] = { $max: `$colDim${j}` };
-                //     }
-                //     facetPipeline.push({ $group: group });
-                // }
-
+                // add a group pipeline for each level
                 for (let colLevel = totalColumnDimension; colLevel >= 0; colLevel--) {
+                    // set some variables
+                    let dimPrefix = "";
+                    let pushOrAddToSet = "$push";
+                    let measureOrValues = "$measure"; // string/number/etc (single value)
+                    let concatOrUnion = "$concatArrays"; // merge and keep duplicates (copy all values)
+
+                    if (colLevel === totalColumnDimension) {
+                        if (kpi.summarizeBy === "COUNTDISTINCT") {
+                            pushOrAddToSet = "$addToSet";
+                        }
+                    } else {
+                        dimPrefix = "_id.";
+                        measureOrValues = "$values"; // array (of values)
+                        if (kpi.summarizeBy === "COUNTDISTINCT") {
+                            concatOrUnion = "$setUnion"; // merge and remove duplicates
+                        }
+                    }
+                    let reduceResult = {};
+                    reduceResult[`${concatOrUnion}`] = ["$$value", "$$this"];
+
+                    let aggregatedMethod = "$sum";
+                    // TODO use a CASE statement and add here other aggregation methods (min, max, avg...)
+                    if (kpi.summarizeBy === "COUNTDISTINCT") {
+                        aggregatedMethod = "$size";
+                    }
+                    let aggregatedMeasure = {};
+                    aggregatedMeasure[`${aggregatedMethod}`] = "$values";
+
                     let groupByDims = {};
 
                     // 1. _id
@@ -69,47 +82,27 @@ exports.getReportTest = async () => {
                         groupByDims = null;
                     } else {
                         for (let j = 1; j <= rowLevel; j++) {
-                            groupByDims[`rowDim${j}`] = `$rowDim${j}`;
+                            groupByDims[`rowDim${j}`] = `$${dimPrefix}rowDim${j}`;
                         }
                         for (let j = 1; j <= colLevel; j++) {
-                            groupByDims[`colDim${j}`] = `$colDim${j}`;
+                            groupByDims[`colDim${j}`] = `$${dimPrefix}colDim${j}`;
                         }
                     }
 
-                    // 2. measure
-                    let measure = {};
-                    if (kpi.summarizeBy === "SUM") {
-                        measure = { $sum: "$measure" };
-                    } else if (kpi.summarizeBy === "COUNTDISTINCT") {
-                        if (colLevel === totalColumnDimension) {
-                            measure = { $sum: 1 };
-                        } else {
-                            measure = { $sum: "$measure" };
-                        }
-                    }
-
-                    let group = { _id: groupByDims, measure };
-
-                    // COUNTDISTINCT
-                    if (kpi.summarizeBy === "COUNTDISTINCT") {
-                        if (colLevel === totalColumnDimension) {
-                            group["docs"] = { $addToSet: `$${kpi.kpiFormula}` }; // array of strings: document-number-id,
-                        } else {
-                            group["docs"] = { $push: "$docs" }; // array of arrays
-                        }
-                    }
+                    // 2. values
+                    let values = {};
+                    values[`${pushOrAddToSet}`] = `${measureOrValues}`;
+                    let group = { _id: groupByDims, values };
 
                     // 3. documents
                     if (colLevel !== totalColumnDimension) {
                         let pushObj = {
                             colLevel: colLevel + 1,
-                            //dim: `$colDim${colLevel + 1}`,
-                            measure: { $sum: "$measure" },
+                            measure: "$measure",
                             documents: "$documents"
                         };
-                        //pushObj[`colDim${colLevel + 1}`] = `$colDim${colLevel + 1}`;
                         for (let j = 1; j <= colLevel + 1; j++) {
-                            pushObj[`colDim${j}`] = `$colDim${j}`;
+                            pushObj[`colDim${j}`] = `$_id.colDim${j}`;
                         }
                         group["documents"] = {
                             $push: pushObj
@@ -119,35 +112,23 @@ exports.getReportTest = async () => {
                     // group
                     facetPipeline.push({ $group: group });
 
-                    if (kpi.summarizeBy === "COUNTDISTINCT" && colLevel !== totalColumnDimension) {
+                    // accumulate the values in a single array (fieldName = "values")
+                    if (colLevel !== totalColumnDimension) {
                         facetPipeline.push({
                             $addFields: {
-                                docs: {
+                                values: {
                                     $reduce: {
-                                        input: "$docs",
+                                        input: "$values",
                                         initialValue: [],
-                                        in: { $setUnion: ["$$value", "$$this"] }
+                                        in: reduceResult
                                     }
                                 }
                             }
                         });
                     }
 
-                    // expose dim fields"
-                    let addFields = {};
-                    for (let j = 1; j <= totalRowDimension; j++) {
-                        addFields[`rowDim${j}`] = `$_id.rowDim${j}`;
-                    }
-                    for (let j = 1; j <= totalColumnDimension; j++) {
-                        addFields[`colDim${j}`] = `$_id.colDim${j}`;
-                    }
-
-                    if (kpi.summarizeBy === "COUNTDISTINCT") {
-                        // overwrite standard measures
-                        addFields["measure"] = { $size: "$docs" };
-                    }
-
-                    facetPipeline.push({ $addFields: addFields });
+                    // calculate measure
+                    facetPipeline.push({ $addFields: { measure: aggregatedMeasure } });
 
                     // sort
                     facetPipeline.push({ $sort: { _id: 1 } });
@@ -168,26 +149,18 @@ exports.getReportTest = async () => {
                     }
                 }
 
-                // console.dir(facetPipeline, { depth: null });
-                // console.log("===========================");
-
                 facetsObj[`${kpi.kpiId}-${kpiVariant.kpiVariantId}-row-level-${rowLevel}`] = facetPipeline;
             }
         });
     });
 
-    //console.dir(facetsObj, { depth: null });
-
     const pipeline = [{ $match: reportDefinition.filters || {} }, { $facet: facetsObj }];
-    console.dir(pipeline, { depth: null });
-    console.log("-----------------------------------------");
-    console.log(".");
-    console.log(".");
-    console.log(".");
-    console.log(".");
-    console.log(".");
-    console.log(".");
-    console.log(".");
+
+    // // debug section
+    // const pipelineForDebug = JSON.stringify(pipeline); // format as string
+    // // console.dir(pipeline, { depth: null }); // format as object
+    // console.log(pipelineForDebug);
+    // console.log("-----------------------------------------");
 
     return db
         .collection(reportDataCollection)
