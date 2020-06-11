@@ -41,10 +41,9 @@ exports.getHomePage = async (req, res) => {
         });
     });
 
-    let headers = {};
-    headers.kpiNameCell = { name: "KPI" };
-    headers.dimensions = rowDimensions.map(dim => dim);
-    let rowsWithFlatColumns = [];
+    let header = {};
+    header.kpiNameCell = { name: "KPI" };
+    header.dimensions = rowDimensions.map(dim => dim);
 
     kpiVariants.forEach(kpiVariant => {
         let unsortedHeaderList = [{ colLevel: 0 }]; // we have different headers for each variant
@@ -58,49 +57,62 @@ exports.getHomePage = async (req, res) => {
             addTreeObjectsToListRecursively(kv0, unsortedHeaderList);
         });
 
-        // unsortedHeaderList.push({
-        //     //measure: 3333,
-        //     colLevel: 3,
-        //     colDim1: 2018,
-        //     colDim2: 201803,
-        //     colDim3: 201808
-        // });
-
-        // unsortedHeaderList.push({
-        //     //measure: 2222,
-        //     colLevel: 2,
-        //     colDim1: 2018,
-        //     colDim2: 201803
-        // });
-
-        // unsortedHeaderList.push({
-        //     //measure: 1111,
-        //     colLevel: 1,
-        //     colDim1: 2018
-        // });
-
-        // unsortedHeaderList.push({
-        //     //measure: 3333,
-        //     colLevel: 3,
-        //     colDim1: 2018,
-        //     colDim2: 201803,
-        //     colDim3: 201807
-        // });
-
-        // const sortedHeaderColumns = sortHeaderColumns(unsortedHeaderList);
-
         const unsortedHeaderTree = getUnsortedHeaderTree(unsortedHeaderList);
 
         const sortedHeaderTree = getSortedHeaderTree(unsortedHeaderTree);
 
         let sortedHeaderList = [{ colLevel: 0 }];
         addTreeObjectsToListRecursively(sortedHeaderTree, sortedHeaderList);
-        headers[`sortedHeaderList`] = sortedHeaderList;
 
         const headersWithDetails = getHeadersWithDetails(sortedHeaderList, totalColumnDimensions);
-        headers[`headersWithDetails`] = headersWithDetails;
 
-        headers[`values${kpiVariant.kpiVariantId}`] = sortedHeaderList;
+        // start header *******************
+        let headerRows = [];
+
+        // init a header with empty rows
+        for (let i = 0; i <= totalColumnDimensions; i++) {
+            headerRows.push([]);
+        }
+
+        // first column, first row
+        headerRows[0].push({
+            rowspan: totalRowDimensions + 1,
+            colSpan: 1,
+            value: "KPI"
+        });
+
+        rowDimensions.forEach((dim, idx) => {
+            headerRows[0].push({
+                rowspan: totalRowDimensions + 1,
+                colspan: 1,
+                value: dim.fieldId
+            });
+        });
+
+        for (let i = 0, l = headersWithDetails.length; i < l; i++) {
+            const elem = headersWithDetails[i];
+
+            rowIdx = elem.colLevel;
+            headerRows[rowIdx].push({
+                rowspan: 1,
+                colspan: elem.colspan,
+                value: elem.value
+            });
+
+            rowIdx = elem.colLevel !== totalColumnDimensions ? elem.colLevel + 1 : elem.colLevel;
+
+            if (elem.descendants > 0) {
+                headerRows[rowIdx].push({
+                    rowspan: elem.rowspan,
+                    colspan: 1,
+                    value: `Total ${elem.value}`
+                });
+            }
+        }
+
+        header[`headerRows`] = headerRows;
+
+        // end header *******************
 
         // add flat values to each row
         let variantRows = rows.filter(x => x.kpiVariant === kpiVariant.kpiVariantId);
@@ -113,28 +125,14 @@ exports.getHomePage = async (req, res) => {
         });
     });
 
-    let headerRows = [];
-    for (let i = 1; i <= totalRowDimensions; i++) {
-        let row = {};
-        row.kpiNameCell = { name: "KPI", rowspan: totalRowDimensions + 1, colspan: 1 };
-        row.dimensions = rowDimensions.map(dim => {
-            dim.rowspan = totalRowDimensions + 1;
-            dim.colspan = 1;
-            return dim;
-        });
-        headerRows.push(row);
-    }
-
     let data = {
         reportName: "Sales profitability",
-        headers,
-        headerRows,
+        header,
         rows
-
         //mongoData
     };
 
-    //res.send(data);
+    //res.send(data.header.headerRows);
     res.render("home", { data, layout2: false });
 };
 
@@ -144,159 +142,159 @@ const getHeadersWithDetails = (sortedHeaderList, totalColumnDimensions) => {
     // 2. value ( = `colDim${colLevel}`)
 
     // Example:
-    let in_sortedHeaderList = [
-        {
-            colLevel: 0
-        },
-        {
-            colLevel: 1,
-            colDim1: 2019
-        },
-        {
-            colLevel: 2,
-            colDim1: 2019,
-            colDim2: 201901
-        },
-        {
-            colLevel: 3,
-            colDim1: 2019,
-            colDim2: 201901,
-            colDim3: 201901
-        },
-        {
-            colLevel: 3,
-            colDim1: 2019,
-            colDim2: 201901,
-            colDim3: 201902
-        },
-        {
-            colLevel: 3,
-            colDim1: 2019,
-            colDim2: 201901,
-            colDim3: 201903
-        },
-        {
-            colLevel: 2,
-            colDim1: 2019,
-            colDim2: 201902
-        },
-        {
-            colLevel: 3,
-            colDim1: 2019,
-            colDim2: 201902,
-            colDim3: 201904
-        },
-        {
-            colLevel: 1,
-            colDim1: 2020
-        },
-        {
-            colLevel: 2,
-            colDim1: 2020,
-            colDim2: 202001
-        },
-        {
-            colLevel: 3,
-            colDim1: 2020,
-            colDim2: 202001,
-            colDim3: 202001
-        },
-        {
-            colLevel: 3,
-            colDim1: 2020,
-            colDim2: 202001,
-            colDim3: 202002
-        }
-    ];
+    // let in_sortedHeaderList = [
+    //     {
+    //         colLevel: 0
+    //     },
+    //     {
+    //         colLevel: 1,
+    //         colDim1: 2019
+    //     },
+    //     {
+    //         colLevel: 2,
+    //         colDim1: 2019,
+    //         colDim2: 201901
+    //     },
+    //     {
+    //         colLevel: 3,
+    //         colDim1: 2019,
+    //         colDim2: 201901,
+    //         colDim3: 201901
+    //     },
+    //     {
+    //         colLevel: 3,
+    //         colDim1: 2019,
+    //         colDim2: 201901,
+    //         colDim3: 201902
+    //     },
+    //     {
+    //         colLevel: 3,
+    //         colDim1: 2019,
+    //         colDim2: 201901,
+    //         colDim3: 201903
+    //     },
+    //     {
+    //         colLevel: 2,
+    //         colDim1: 2019,
+    //         colDim2: 201902
+    //     },
+    //     {
+    //         colLevel: 3,
+    //         colDim1: 2019,
+    //         colDim2: 201902,
+    //         colDim3: 201904
+    //     },
+    //     {
+    //         colLevel: 1,
+    //         colDim1: 2020
+    //     },
+    //     {
+    //         colLevel: 2,
+    //         colDim1: 2020,
+    //         colDim2: 202001
+    //     },
+    //     {
+    //         colLevel: 3,
+    //         colDim1: 2020,
+    //         colDim2: 202001,
+    //         colDim3: 202001
+    //     },
+    //     {
+    //         colLevel: 3,
+    //         colDim1: 2020,
+    //         colDim2: 202001,
+    //         colDim3: 202002
+    //     }
+    // ];
 
-    let out_headersWithDetails = [
-        {
-            colLevel: 0,
-            descendants: 11,
-            value: "Values / Total values"
-        },
-        {
-            colLevel: 1,
-            colDim1: 2019,
-            descendants: 6,
-            value: "2019"
-        },
-        {
-            colLevel: 2,
-            colDim1: 2019,
-            colDim2: 201901,
-            descendants: 3,
-            value: "201901"
-        },
-        {
-            colLevel: 3,
-            colDim1: 2019,
-            colDim2: 201901,
-            colDim3: 201901,
-            descendants: 0,
-            value: "201901"
-        },
-        {
-            colLevel: 3,
-            colDim1: 2019,
-            colDim2: 201901,
-            colDim3: 201902,
-            descendants: 0,
-            value: "201902"
-        },
-        {
-            colLevel: 3,
-            colDim1: 2019,
-            colDim2: 201901,
-            colDim3: 201903,
-            descendants: 0,
-            values: "201903"
-        },
-        {
-            colLevel: 2,
-            colDim1: 2019,
-            colDim2: 201902,
-            descendants: 1,
-            values: "201902"
-        },
-        {
-            colLevel: 3,
-            colDim1: 2019,
-            colDim2: 201902,
-            colDim3: 201904,
-            descendants: 0,
-            values: "201904"
-        },
-        {
-            colLevel: 1,
-            colDim1: 2020,
-            descendants: 3,
-            values: "2020"
-        },
-        {
-            colLevel: 2,
-            colDim1: 2020,
-            colDim2: 202001,
-            descendants: 2,
-            values: "202001"
-        },
-        {
-            colLevel: 3,
-            colDim1: 2020,
-            colDim2: 202001,
-            colDim3: 202001,
-            descendants: 0,
-            values: "202001"
-        },
-        {
-            colLevel: 3,
-            colDim1: 2020,
-            colDim2: 202001,
-            colDim3: 202002,
-            descendants: 0,
-            values: "202002"
-        }
-    ];
+    // let out_headersWithDetails = [
+    //     {
+    //         colLevel: 0,
+    //         descendants: 11,
+    //         value: "Values / Total values"
+    //     },
+    //     {
+    //         colLevel: 1,
+    //         colDim1: 2019,
+    //         descendants: 6,
+    //         value: "2019"
+    //     },
+    //     {
+    //         colLevel: 2,
+    //         colDim1: 2019,
+    //         colDim2: 201901,
+    //         descendants: 3,
+    //         value: "201901"
+    //     },
+    //     {
+    //         colLevel: 3,
+    //         colDim1: 2019,
+    //         colDim2: 201901,
+    //         colDim3: 201901,
+    //         descendants: 0,
+    //         value: "201901"
+    //     },
+    //     {
+    //         colLevel: 3,
+    //         colDim1: 2019,
+    //         colDim2: 201901,
+    //         colDim3: 201902,
+    //         descendants: 0,
+    //         value: "201902"
+    //     },
+    //     {
+    //         colLevel: 3,
+    //         colDim1: 2019,
+    //         colDim2: 201901,
+    //         colDim3: 201903,
+    //         descendants: 0,
+    //         values: "201903"
+    //     },
+    //     {
+    //         colLevel: 2,
+    //         colDim1: 2019,
+    //         colDim2: 201902,
+    //         descendants: 1,
+    //         values: "201902"
+    //     },
+    //     {
+    //         colLevel: 3,
+    //         colDim1: 2019,
+    //         colDim2: 201902,
+    //         colDim3: 201904,
+    //         descendants: 0,
+    //         values: "201904"
+    //     },
+    //     {
+    //         colLevel: 1,
+    //         colDim1: 2020,
+    //         descendants: 3,
+    //         values: "2020"
+    //     },
+    //     {
+    //         colLevel: 2,
+    //         colDim1: 2020,
+    //         colDim2: 202001,
+    //         descendants: 2,
+    //         values: "202001"
+    //     },
+    //     {
+    //         colLevel: 3,
+    //         colDim1: 2020,
+    //         colDim2: 202001,
+    //         colDim3: 202001,
+    //         descendants: 0,
+    //         values: "202001"
+    //     },
+    //     {
+    //         colLevel: 3,
+    //         colDim1: 2020,
+    //         colDim2: 202001,
+    //         colDim3: 202002,
+    //         descendants: 0,
+    //         values: "202002"
+    //     }
+    // ];
 
     // init a counter for each column level
     let counterObj = {};
@@ -328,9 +326,9 @@ const getHeadersWithDetails = (sortedHeaderList, totalColumnDimensions) => {
         elem.value = "";
         if (elem.colLevel === 0) {
             if (totalColumnDimensions === 0) {
-                elem.value = "Values"; // TODO add also the KPI variant name (if there are many)
+                elem.value = "Actual values"; // TODO add also the KPI variant name (if there are many)
             } else {
-                elem.value = "Total values";
+                elem.value = "Actual values";
             }
         } else {
             elem.value = elem[`colDim${elem.colLevel}`].toString();

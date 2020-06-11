@@ -9,51 +9,16 @@
 
 <table class="table table-bordered table-sm">
     <thead class="text-center">
+        {{#each data.header.headerRows}}
         <tr>
-            <th rowspan="4" colspan="1">{{data.headers.kpiNameCell.name}}</th>
-            {{#each data.headers.dimensions}}
-            <th rowspan="4" colspan="1">{{fieldId}}</th>
+            {{#each this}}
+            <th rowspan="{{rowspan}}" colspan="{{colspan}}">{{value}}</th>
             {{/each}}
-            <th rowspan="1" colspan="12">Actual values</th>
         </tr>
+        {{/each}}
 
-        <tr>
-            <th rowspan="3" colspan="1">Total Actual values</th>
-            <th rowspan="1" colspan="7">2019</th>
-            <th rowspan="1" colspan="4">2020</th>
-        </tr>
-
-        <tr>
-            <th rowspan="2" colspan="1">Total 2019</th>
-            <th rowspan="1" colspan="4">Q1</th>
-            <th rowspan="1" colspan="2">Q2</th>
-
-            <th rowspan="2" colspan="1">Total 2020</th>
-            <th rowspan="1" colspan="3">Q1</th>
-        </tr>
-
-        <tr>
-            <th rowspan="1" colspan="1">Total Q1</th>
-            <th rowspan="1" colspan="1">M1</th>
-            <th rowspan="1" colspan="1">M2</th>
-            <th rowspan="1" colspan="1">M3</th>
-
-            <th rowspan="1" colspan="1">Total Q2</th>
-            <th rowspan="1" colspan="1">M4</th>
-
-            <th rowspan="1" colspan="1">Total Q1</th>
-            <th rowspan="1" colspan="1">M1</th>
-            <th rowspan="1" colspan="1">M2</th>
-
-        </tr>
-
-
-        {{!-- <tr>
-            {{#each data.headers.valuesv1}}
-            <th>{{colLevel}}</th>
-            {{/each}}
-        </tr> --}}
     </thead>
+
 
     <tbody>
         {{#each data.rows}}
