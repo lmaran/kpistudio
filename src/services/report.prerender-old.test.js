@@ -1,4 +1,4 @@
-const srcFile = require("./report.prerender.js");
+const srcFile = require("./report.prerender-old.js");
 
 describe("getRowDimensions()", () => {
     const in_totalRowDimensions = 3;
