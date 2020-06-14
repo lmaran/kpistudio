@@ -140,7 +140,7 @@ exports.getReportTest = async () => {
                             addFields[`rowDim${j}`] = `$_id.rowDim${j}`;
                         }
                         facetPipeline.push({ $addFields: addFields });
-                        facetPipeline.push({ $project: { _id: 0, docs: 0 } });
+                        facetPipeline.push({ $project: { _id: 0, values: 0 } });
                     }
                 }
 
