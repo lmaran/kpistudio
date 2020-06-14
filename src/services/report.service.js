@@ -4,11 +4,6 @@ const { ObjectID } = require("mongodb");
 const reportDefinitionCollection = "reportDefinitions";
 const reportDataCollection = "reportData";
 
-exports.getPersonById = async id => {
-    const db = await mongoHelper.getDb();
-    return db.collection(personsCollection).findOne({ _id: new ObjectID(id) });
-};
-
 exports.getReportTest = async () => {
     const db = await mongoHelper.getDb();
 
@@ -172,50 +167,4 @@ exports.getReportDefinition = async () => {
     const id = "5e94840bbff00f4417e6eb42";
     const db = await mongoHelper.getDb();
     return db.collection(reportDefinitionCollection).findOne({ _id: new ObjectID(id) });
-};
-
-exports.getReportTest3 = async () => {
-    return {
-        name: "Raport 1",
-
-        headers: [
-            {
-                v: "values"
-            },
-            {
-                v: "Amt"
-            }
-        ],
-
-        rows: [
-            {
-                cols: [
-                    {
-                        v: "Sales"
-                    },
-                    {
-                        v: "12"
-                    }
-                ]
-            },
-            {
-                cols: [
-                    {
-                        v: "Docs"
-                    },
-                    {
-                        v: "22"
-                    }
-                ]
-            }
-        ]
-    };
-};
-
-exports.getAllPersons = async filter => {
-    const db = await mongoHelper.getDb();
-    return db
-        .collection(personsCollection)
-        .find(filter)
-        .toArray();
 };
