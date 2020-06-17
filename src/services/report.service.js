@@ -24,6 +24,15 @@ exports.getReportTest = async () => {
     let columnDimensions = reportDefinition.columnDimensions;
     let totalColumnDimension = columnDimensions.length;
 
+    // TODO: remove this hard-coding fields
+    const uniqueFields = ["extPrice", "document-number-id"]; // TODO: get them from report definition
+    // TODO: get them from report definition
+    // we can also have fields with multiple agg functions: { field: "document-number-id", agg: "SUM" }
+    const uniqueFieldsWithAgg = [
+        { field: "extPrice", summarizeBy: "SUM" },
+        { field: "document-number-id", summarizeBy: "COUNTDISTINCT" }
+    ];
+
     kpis.forEach(kpi => {
         kpiVariants.forEach(kpiVariant => {
             for (let rowLevel = totalRowDimension; rowLevel >= 0; rowLevel--) {
@@ -36,66 +45,69 @@ exports.getReportTest = async () => {
                 columnDimensions.forEach((dim, idx) => {
                     addDimFields[`colDim${idx + 1}`] = `$${dim.fieldId}`;
                 });
+                addDimFields[`measure`] = `$${kpi.kpiFormula}`;
                 facetPipeline.push({ $addFields: addDimFields });
-
-                facetPipeline.push({ $addFields: { measure: `$${kpi.kpiFormula}` } });
 
                 // add a group pipeline for each level
                 for (let colLevel = totalColumnDimension; colLevel >= 0; colLevel--) {
-                    // set some variables
-                    let dimPrefix = "";
+                    // 1. $group stage; ========================================
+                    let group = { _id: {} };
+
+                    // 1.1 group._id
+                    const dimPrefix = colLevel === totalColumnDimension ? "" : "_id.";
+                    if (rowLevel === 0 && colLevel === 0) {
+                        group._id = null;
+                    } else {
+                        for (let j = 1; j <= rowLevel; j++) {
+                            group._id[`rowDim${j}`] = `$${dimPrefix}rowDim${j}`;
+                        }
+                        for (let j = 1; j <= colLevel; j++) {
+                            group._id[`colDim${j}`] = `$${dimPrefix}colDim${j}`;
+                        }
+                    }
+
+                    // 1.2 group.values
+                    // old values
                     let pushOrAddToSet = "$push";
                     let measureOrValues = "$measure"; // string/number/etc (single value)
-                    let concatOrUnion = "$concatArrays"; // merge and keep duplicates (copy all values)
-
                     if (colLevel === totalColumnDimension) {
                         if (kpi.summarizeBy === "COUNTDISTINCT") {
                             pushOrAddToSet = "$addToSet";
                         }
                     } else {
-                        dimPrefix = "_id.";
                         measureOrValues = "$values"; // array (of values)
-                        if (kpi.summarizeBy === "COUNTDISTINCT") {
-                            concatOrUnion = "$setUnion"; // merge and remove duplicates
-                        }
                     }
-                    let reduceResult = {};
-                    reduceResult[`${concatOrUnion}`] = ["$$value", "$$this"];
+                    group.values = {};
+                    group.values[`${pushOrAddToSet}`] = `${measureOrValues}`;
 
-                    let aggregatedMethod = "$sum";
-                    // TODO use a CASE statement and add here other aggregation methods (min, max, avg...)
-                    if (kpi.summarizeBy === "COUNTDISTINCT") {
-                        aggregatedMethod = "$size";
-                    }
-                    let aggregatedMeasure = {};
-                    aggregatedMeasure[`${aggregatedMethod}`] = "$values";
+                    // new values
+                    uniqueFieldsWithAgg.forEach(fieldWithAgg => {
+                        var valuesFieldName = `${fieldWithAgg.field}-values`; // e.g: "extPrice-values"
+                        let pushFieldOrValuesObj = {};
 
-                    let groupByDims = {};
-
-                    // 1. _id
-                    if (rowLevel === 0 && colLevel === 0) {
-                        groupByDims = null;
-                    } else {
-                        for (let j = 1; j <= rowLevel; j++) {
-                            groupByDims[`rowDim${j}`] = `$${dimPrefix}rowDim${j}`;
+                        if (colLevel === totalColumnDimension) {
+                            pushFieldOrValuesObj = { $push: `$${fieldWithAgg.field}` }; // string/number/etc (single value)
+                        } else {
+                            pushFieldOrValuesObj = { $push: `$${valuesFieldName}` }; // array (of values)
                         }
-                        for (let j = 1; j <= colLevel; j++) {
-                            groupByDims[`colDim${j}`] = `$${dimPrefix}colDim${j}`;
-                        }
-                    }
 
-                    // 2. values
-                    let values = {};
-                    values[`${pushOrAddToSet}`] = `${measureOrValues}`;
-                    let group = { _id: groupByDims, values };
+                        group[valuesFieldName] = pushFieldOrValuesObj;
+                    });
 
-                    // 3. documents
+                    // 1.3. group.documents
                     if (colLevel !== totalColumnDimension) {
                         let pushObj = {
                             colLevel: colLevel + 1,
                             measure: "$measure",
                             documents: "$documents"
                         };
+
+                        // add all other measures
+                        kpis.forEach(kpi1 => {
+                            const measureField = `measure-${kpi1.kpiId}`; // e.g: "measure-k1"
+                            pushObj[`${measureField}`] = `$${measureField}`;
+                        });
+
                         for (let j = 1; j <= colLevel + 1; j++) {
                             pushObj[`colDim${j}`] = `$_id.colDim${j}`;
                         }
@@ -104,31 +116,80 @@ exports.getReportTest = async () => {
                         };
                     }
 
-                    // group
                     facetPipeline.push({ $group: group });
 
-                    // accumulate the values in a single array (fieldName = "values")
+                    // 1.4 add field (values)
+                    // accumulate the values in a single array (fieldName = "values") ========================================
                     if (colLevel !== totalColumnDimension) {
-                        facetPipeline.push({
-                            $addFields: {
-                                values: {
-                                    $reduce: {
-                                        input: "$values",
-                                        initialValue: [],
-                                        in: reduceResult
+                        let objValues = {};
+
+                        // old values
+                        let reduceResult = {};
+                        if (kpi.summarizeBy === "COUNTDISTINCT") {
+                            reduceResult[`$setUnion`] = ["$$value", "$$this"]; // merge and remove duplicates
+                        } else {
+                            reduceResult[`$concatArrays`] = ["$$value", "$$this"]; // merge and keep duplicates (copy all values)
+                        }
+
+                        objValues["values"] = {
+                            $reduce: {
+                                input: "$values",
+                                initialValue: [],
+                                in: reduceResult
+                            }
+                        };
+
+                        // new values
+                        uniqueFieldsWithAgg.forEach(fieldWithAgg => {
+                            var valuesFieldName = `${fieldWithAgg.field}-values`; // e.g: "extPrice-values"
+                            objValues[`${valuesFieldName}`] = {
+                                $reduce: {
+                                    input: `$${valuesFieldName}`,
+                                    initialValue: [],
+                                    in: {
+                                        $concatArrays: ["$$value", "$$this"]
                                     }
                                 }
-                            }
+                            };
+                        });
+
+                        facetPipeline.push({
+                            $addFields: objValues
                         });
                     }
 
-                    // calculate measure
-                    facetPipeline.push({ $addFields: { measure: aggregatedMeasure } });
+                    // 1.5 add field (measures)
+                    let aggMeasures = {};
 
-                    // sort
+                    // old measures
+                    if (kpi.summarizeBy === "COUNTDISTINCT") {
+                        aggMeasures[`measure`] = { $size: "$values" };
+                    } else {
+                        aggMeasures[`measure`] = { $sum: "$values" };
+                    }
+
+                    // new measures
+                    kpis.forEach(kpi1 => {
+                        var valuesFieldName = `${kpi1.kpiFormula}-values`; // e.g: "extPrice-SUM-values"
+
+                        let obj = {};
+                        // TODO use a CASE statement and add here other aggregation methods (min, max, avg...)
+                        if (kpi1.summarizeBy === "COUNTDISTINCT") {
+                            // https://stackoverflow.com/a/44598723
+                            obj = { $size: { $setDifference: [`$${valuesFieldName}`, []] } };
+                        } else {
+                            // SUM
+                            obj = { $sum: `$${valuesFieldName}` };
+                        }
+
+                        aggMeasures[`measure-${kpi1.kpiId}`] = obj;
+                    });
+                    facetPipeline.push({ $addFields: aggMeasures });
+
+                    // 1.6 sort
                     facetPipeline.push({ $sort: { _id: 1 } });
 
-                    // add first-level fields & the final project
+                    // 1.7 add first-level fields & the final project
                     if (colLevel === 0) {
                         let addFields = {
                             kpi: kpi.kpiId,
@@ -140,7 +201,17 @@ exports.getReportTest = async () => {
                             addFields[`rowDim${j}`] = `$_id.rowDim${j}`;
                         }
                         facetPipeline.push({ $addFields: addFields });
-                        facetPipeline.push({ $project: { _id: 0, values: 0 } });
+
+                        let projectObj = { _id: 0 };
+                        // exclude old values
+                        projectObj["values"] = 0;
+                        // exclude new values
+                        uniqueFieldsWithAgg.forEach(fieldWithAgg => {
+                            var valuesFieldName = `${fieldWithAgg.field}-values`; // e.g: "extPrice-values"
+                            projectObj[`${valuesFieldName}`] = 0;
+                        });
+
+                        facetPipeline.push({ $project: projectObj });
                     }
                 }
 
@@ -151,11 +222,11 @@ exports.getReportTest = async () => {
 
     const pipeline = [{ $match: reportDefinition.filters || {} }, { $facet: facetsObj }];
 
-    // // debug section
-    // const pipelineForDebug = JSON.stringify(pipeline); // format as string
-    // // console.dir(pipeline, { depth: null }); // format as object
-    // console.log(pipelineForDebug);
-    // console.log("-----------------------------------------");
+    // debug section
+    const pipelineForDebug = JSON.stringify(pipeline); // format as string
+    // console.dir(pipeline, { depth: null }); // format as object
+    console.log(pipelineForDebug);
+    console.log("-----------------------------------------");
 
     return db
         .collection(reportDataCollection)

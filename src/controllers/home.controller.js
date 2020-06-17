@@ -7,6 +7,7 @@ exports.getHomePage = async (req, res) => {
 
     const data = reportPrerender.getReportPreenderedData(reportData, reportDefinition);
 
+    //res.send(reportData);
     //res.send(data.header.headerRows);
     res.render("home", { data, layout2: false });
 };
