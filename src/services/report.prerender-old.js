@@ -1,5 +1,5 @@
 // take a TREE (source), go through all its objects (leaves) and add them into a flat LIST (if it's not already there)
-exports.addTreeObjectsToListRecursively = (sourceTreeParent, targetList, copyMeasure) => {
+exports.addTreeObjectsToListRecursively = (sourceTreeParent, targetList, copyMeasure, kpiId) => {
     // Example:
 
     // let sourceTreeEx = {
@@ -43,7 +43,7 @@ exports.addTreeObjectsToListRecursively = (sourceTreeParent, targetList, copyMea
                 newChild[`colDim${i}`] = sourceTreeChild[`colDim${i}`];
             }
             if (copyMeasure) {
-                newChild.measure = sourceTreeChild.measure;
+                newChild.measure = sourceTreeChild[`measure-${kpiId}`];
             }
 
             let found = targetList.find(x => {
@@ -57,7 +57,7 @@ exports.addTreeObjectsToListRecursively = (sourceTreeParent, targetList, copyMea
                 targetList.push(newChild);
             }
 
-            this.addTreeObjectsToListRecursively(sourceTreeChild, targetList, copyMeasure);
+            this.addTreeObjectsToListRecursively(sourceTreeChild, targetList, copyMeasure, kpiId);
         });
     }
 };
@@ -120,11 +120,11 @@ exports.addObjectToTreeRecursively = (sourceObj, targetTreeParent) => {
     }
 };
 
-exports.addRowsRecursively = (parentKv, totalRowDimensions, mongoDataAsObj, kpi, rows) => {
+exports.addRowsRecursively = (parentKv, totalRowDimensions, mongoDataAsObj, rows) => {
     const curentRowLevel = parentKv.rowLevel + 1;
 
     if (curentRowLevel <= totalRowDimensions) {
-        let childKvs = mongoDataAsObj[`${kpi.kpiId}-v1-row-level-${curentRowLevel}`];
+        let childKvs = mongoDataAsObj[`k1-v1-row-level-${curentRowLevel}`];
 
         if (curentRowLevel >= 2) {
             childKvs = childKvs.filter(x => {
@@ -139,7 +139,7 @@ exports.addRowsRecursively = (parentKv, totalRowDimensions, mongoDataAsObj, kpi,
         childKvs.forEach(childKv => {
             rows.push(childKv);
 
-            this.addRowsRecursively(childKv, totalRowDimensions, mongoDataAsObj, kpi, rows);
+            this.addRowsRecursively(childKv, totalRowDimensions, mongoDataAsObj, rows);
         });
     }
 };
@@ -234,9 +234,9 @@ exports.getSortedHeaderTree = sourceTreeParent => {
     return sourceTreeParent;
 };
 
-exports.getSortedRowValuesList = (sourceTreeParent, sortedHeaderList) => {
-    let unsortedValuesList = [{ colLevel: 0, measure: sourceTreeParent.measure }];
-    this.addTreeObjectsToListRecursively(sourceTreeParent, unsortedValuesList, true);
+exports.getSortedRowValuesList = (sourceTreeParent, sortedHeaderList, kpiId) => {
+    let unsortedValuesList = [{ colLevel: 0, measure: sourceTreeParent[`measure-${kpiId}`] }];
+    this.addTreeObjectsToListRecursively(sourceTreeParent, unsortedValuesList, true, kpiId);
 
     let sortedRowValuesList = [];
     sortedHeaderList.forEach(headerValue => {
