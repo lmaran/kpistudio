@@ -29,7 +29,7 @@ exports.getReportPreenderedData = (reportData, reportDefinition) => {
     kpis.forEach(kpi => {
         rows.forEach(row => {
             let newRow = {};
-            newRow.kpiNameCell = reportPrerender.getRowKpiNameCell(row, kpis);
+            newRow.kpiNameCell = reportPrerender.getRowKpiNameCell(row, kpi);
             newRow.dimensions = reportPrerender.getRowDimensions(row, rowDimensions.length);
             newRow[`valuesv1`] = reportPrerender.getSortedRowValuesList(row, unsortedHeaderList, kpi.kpiId);
             newRows.push(newRow);

@@ -259,10 +259,10 @@ exports.getSortedRowValuesList = (sourceTreeParent, sortedHeaderList, kpiId) => 
     return sortedRowValuesList;
 };
 
-exports.getRowKpiNameCell = (row, kpis) => {
+exports.getRowKpiNameCell = (row, kpi) => {
     let kpiNameCell = {};
     if (row.rowLevel === 0) {
-        const kpi = kpis.find(x => x.kpiId === row.kpi);
+        //const kpi = kpis.find(x => x.kpiId === row.kpi);
         kpiNameCell.name = kpi.displayName;
     }
     return kpiNameCell;
