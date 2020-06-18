@@ -98,8 +98,7 @@ exports.getReportTest = async () => {
                     if (colLevel !== totalColumnDimension) {
                         let pushObj = {
                             colLevel: colLevel + 1,
-                            measure: "$measure",
-                            documents: "$documents"
+                            measure: "$measure"
                         };
 
                         // add all other measures
@@ -111,6 +110,8 @@ exports.getReportTest = async () => {
                         for (let j = 1; j <= colLevel + 1; j++) {
                             pushObj[`colDim${j}`] = `$_id.colDim${j}`;
                         }
+                        pushObj[`documents`] = "$documents";
+
                         group["documents"] = {
                             $push: pushObj
                         };
@@ -222,11 +223,11 @@ exports.getReportTest = async () => {
 
     const pipeline = [{ $match: reportDefinition.filters || {} }, { $facet: facetsObj }];
 
-    // debug section
-    const pipelineForDebug = JSON.stringify(pipeline); // format as string
-    // console.dir(pipeline, { depth: null }); // format as object
-    console.log(pipelineForDebug);
-    console.log("-----------------------------------------");
+    // // debug section
+    // const pipelineForDebug = JSON.stringify(pipeline); // format as string
+    // // console.dir(pipeline, { depth: null }); // format as object
+    // console.log(pipelineForDebug);
+    // console.log("-----------------------------------------");
 
     return db
         .collection(reportDataCollection)

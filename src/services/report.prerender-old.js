@@ -120,11 +120,11 @@ exports.addObjectToTreeRecursively = (sourceObj, targetTreeParent) => {
     }
 };
 
-exports.addRowsRecursively = (parentKv, totalRowDimensions, mongoDataAsObj, kpi, kpiVariant, rows) => {
+exports.addRowsRecursively = (parentKv, totalRowDimensions, mongoDataAsObj, kpi, rows) => {
     const curentRowLevel = parentKv.rowLevel + 1;
 
     if (curentRowLevel <= totalRowDimensions) {
-        let childKvs = mongoDataAsObj[`${kpi.kpiId}-${kpiVariant.kpiVariantId}-row-level-${curentRowLevel}`];
+        let childKvs = mongoDataAsObj[`${kpi.kpiId}-v1-row-level-${curentRowLevel}`];
 
         if (curentRowLevel >= 2) {
             childKvs = childKvs.filter(x => {
@@ -139,7 +139,7 @@ exports.addRowsRecursively = (parentKv, totalRowDimensions, mongoDataAsObj, kpi,
         childKvs.forEach(childKv => {
             rows.push(childKv);
 
-            this.addRowsRecursively(childKv, totalRowDimensions, mongoDataAsObj, kpi, kpiVariant, rows);
+            this.addRowsRecursively(childKv, totalRowDimensions, mongoDataAsObj, kpi, rows);
         });
     }
 };
