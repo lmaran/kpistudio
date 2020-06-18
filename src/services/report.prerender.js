@@ -29,11 +29,14 @@ exports.getReportPreenderedData = (reportData, reportDefinition) => {
     reportPrerender.addTreeObjectsToListRecursively(kv0, unsortedHeaderList);
 
     // add flat values to each row
+    newRows = [];
     rows.forEach(row => {
-        row.kpiNameCell = reportPrerender.getRowKpiNameCell(row, kpis);
-        row.dimensions = reportPrerender.getRowDimensions(row, rowDimensions.length);
-        row[`valuesv1`] = reportPrerender.getSortedRowValuesList(row, unsortedHeaderList);
-        delete row.documents; // no longer needed
+        let newRow = {};
+        newRow.kpiNameCell = reportPrerender.getRowKpiNameCell(row, kpis);
+        newRow.dimensions = reportPrerender.getRowDimensions(row, rowDimensions.length);
+        newRow[`valuesv1`] = reportPrerender.getSortedRowValuesList(row, unsortedHeaderList);
+        // delete row.documents; // no longer needed
+        newRows.push(newRow);
     });
 
     header[`headerRows`] = reportPrerenderHeader.getReportHeaderRows(unsortedHeaderList, reportDefinition);
@@ -41,7 +44,7 @@ exports.getReportPreenderedData = (reportData, reportDefinition) => {
     let data = {
         reportName: "Sales profitability",
         header,
-        rows
+        rows: newRows
     };
 
     return data;
