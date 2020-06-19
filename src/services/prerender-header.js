@@ -1,12 +1,10 @@
-const reportPrerender = require("./report.prerender-old");
+const prerenderCommon = require("./prerender-common");
 
 exports.getHeaderList = reportDataAsObj => {
     // create the header based on first reportData row (level=0)
     const firstTreeRow = reportDataAsObj[`v1-row-level-${0}`][0];
 
-    let headerList = [{ colLevel: 0 }]; // we have different headers for each variant
-
-    reportPrerender.addTreeObjectsToListRecursively(firstTreeRow, headerList);
+    let headerList = prerenderCommon.convertTreeRowToList(firstTreeRow, false, false);
     return headerList;
 };
 

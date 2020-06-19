@@ -1,4 +1,4 @@
-const srcFile = require("./report.prerender-header.js");
+const srcFile = require("./prerender-header.js");
 
 describe("getHeadersWithDetails()", () => {
     const in_sortedHeaderList = [

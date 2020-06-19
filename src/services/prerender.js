@@ -1,5 +1,5 @@
-const reportPrerender = require("./report.prerender-old");
-const reportPrerenderHeader = require("./report.prerender-header");
+const prerenderBody = require("./prerender-body");
+const prerenderHeader = require("./prerender-header");
 
 exports.getReportPreenderedData = (reportData, reportDefinition) => {
     let rowDimensions = reportDefinition.rowDimensions;
@@ -10,11 +10,11 @@ exports.getReportPreenderedData = (reportData, reportDefinition) => {
     const reportDataAsObj = reportData[0];
 
     // header
-    const headerList = reportPrerenderHeader.getHeaderList(reportDataAsObj);
-    const headerRows = reportPrerenderHeader.getReportHeaderRows(headerList, reportDefinition);
+    const headerList = prerenderHeader.getHeaderList(reportDataAsObj);
+    const headerRows = prerenderHeader.getReportHeaderRows(headerList, reportDefinition);
 
     // body
-    const bodyRows = reportPrerender.getBodyRows(reportDataAsObj, headerList, kpis, rowDimensions.length);
+    const bodyRows = prerenderBody.getBodyRows(reportDataAsObj, headerList, kpis, rowDimensions.length);
 
     let data = {
         reportName: "Sales profitability",

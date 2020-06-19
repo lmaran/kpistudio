@@ -1,5 +1,5 @@
 const reportService = require("../services/report.service");
-const reportPrerender = require("../services/report.prerender");
+const reportPrerender = require("../services/prerender");
 
 exports.getHomePage = async (req, res) => {
     const reportData = await reportService.getReportTest();
