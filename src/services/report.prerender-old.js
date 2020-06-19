@@ -1,3 +1,43 @@
+exports.getRearangedRows = (reportDataAsObj, rowDimensionsLength) => {
+    let rows = [];
+
+    // level 0
+    const kv0s = reportDataAsObj[`v1-row-level-${0}`];
+    const kv0 = kv0s[0];
+    rows.push(kv0);
+
+    this.addRowsRecursively(kv0, rowDimensionsLength, reportDataAsObj, rows);
+
+    return rows;
+};
+
+exports.getBodyRows = (rows, headerList, kpis, rowDimensionsLength) => {
+    // add flat values to each row
+    newRows = [];
+    kpis.forEach(kpi => {
+        rows.forEach(row => {
+            let newRow = { columns: [] };
+
+            // 1. kpi name (1st cell)
+            const kpiName = row.rowLevel === 0 ? kpi.displayName : "";
+            newRow.columns.push({ value: kpiName });
+
+            newRow.dimensions = this.getRowDimensions(row, rowDimensionsLength);
+            newRow.dimensions.forEach(x => {
+                newRow.columns.push({ value: x.rowDim });
+            });
+
+            newRow.valuesv1 = this.getSortedRowValuesList(row, headerList, kpi.kpiId);
+            newRow.valuesv1.forEach(x => {
+                newRow.columns.push({ value: x.measure });
+            });
+
+            newRows.push(newRow);
+        });
+    });
+    return newRows;
+};
+
 // take a TREE (source), go through all its objects (leaves) and add them into a flat LIST (if it's not already there)
 exports.addTreeObjectsToListRecursively = (sourceTreeParent, targetList, copyMeasure, kpiId) => {
     // Example:

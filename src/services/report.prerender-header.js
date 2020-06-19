@@ -1,5 +1,15 @@
 const reportPrerender = require("./report.prerender-old");
 
+exports.getHeaderList = reportDataAsObj => {
+    const kv0s = reportDataAsObj[`v1-row-level-${0}`];
+    const kv0 = kv0s[0];
+
+    let headerList = [{ colLevel: 0 }]; // we have different headers for each variant
+
+    reportPrerender.addTreeObjectsToListRecursively(kv0, headerList);
+    return headerList;
+};
+
 exports.getReportHeaderRows = (sortedHeaderList, reportDefinition) => {
     let rowDimensions = reportDefinition.rowDimensions;
     let totalRowDimensions = rowDimensions.length;
