@@ -2,17 +2,20 @@ exports.getRearangedRows = (reportDataAsObj, rowDimensionsLength) => {
     let rows = [];
 
     // level 0
-    const kv0s = reportDataAsObj[`v1-row-level-${0}`];
-    const kv0 = kv0s[0];
-    rows.push(kv0);
+    const firstTreeRow = reportDataAsObj[`v1-row-level-${0}`][0];
 
-    this.addRowsRecursively(kv0, rowDimensionsLength, reportDataAsObj, rows);
+    rows.push(firstTreeRow);
+
+    this.addRowsRecursively(firstTreeRow, rowDimensionsLength, reportDataAsObj, rows);
 
     return rows;
 };
 
-exports.getBodyRows = (rows, headerList, kpis, rowDimensionsLength) => {
+exports.getBodyRows = (reportDataAsObj, headerList, kpis, rowDimensionsLength) => {
     // add flat values to each row
+
+    const rows = this.getRearangedRows(reportDataAsObj, rowDimensionsLength);
+
     newRows = [];
     kpis.forEach(kpi => {
         rows.forEach(row => {
@@ -22,13 +25,13 @@ exports.getBodyRows = (rows, headerList, kpis, rowDimensionsLength) => {
             const kpiName = row.rowLevel === 0 ? kpi.displayName : "";
             newRow.columns.push({ value: kpiName });
 
-            newRow.dimensions = this.getRowDimensions(row, rowDimensionsLength);
-            newRow.dimensions.forEach(x => {
+            const rowDimensions = this.getRowDimensions(row, rowDimensionsLength);
+            rowDimensions.forEach(x => {
                 newRow.columns.push({ value: x.rowDim });
             });
 
-            newRow.valuesv1 = this.getSortedRowValuesList(row, headerList, kpi.kpiId);
-            newRow.valuesv1.forEach(x => {
+            const rowValues = this.getSortedRowValuesList(row, headerList, kpi.kpiId);
+            rowValues.forEach(x => {
                 newRow.columns.push({ value: x.measure });
             });
 
@@ -161,15 +164,15 @@ exports.addObjectToTreeRecursively = (sourceObj, targetTreeParent) => {
 };
 
 exports.addRowsRecursively = (parentKv, totalRowDimensions, mongoDataAsObj, rows) => {
-    const curentRowLevel = parentKv.rowLevel + 1;
+    const currentRowLevel = parentKv.rowLevel + 1;
 
-    if (curentRowLevel <= totalRowDimensions) {
-        let childKvs = mongoDataAsObj[`v1-row-level-${curentRowLevel}`];
+    if (currentRowLevel <= totalRowDimensions) {
+        let childKvs = mongoDataAsObj[`v1-row-level-${currentRowLevel}`];
 
-        if (curentRowLevel >= 2) {
+        if (currentRowLevel >= 2) {
             childKvs = childKvs.filter(x => {
                 let result = true;
-                for (let rowLevel = 1; rowLevel < curentRowLevel; rowLevel++) {
+                for (let rowLevel = 1; rowLevel < currentRowLevel; rowLevel++) {
                     result = result && x[`rowDim${rowLevel}`] === parentKv[`rowDim${rowLevel}`];
                 }
                 return result;
@@ -320,7 +323,8 @@ exports.getRowDimensions = (row, totalRowDimensions) => {
     //     // other props
     // };
 
-    // let out_rowDimensions = [{}, { rowDim: "c1" }, {}];
+    // let out_rowDimensions = [{}, { rowDim: "c1" }, {}]; // for rows with level 2
+    // let out_rowDimensions = [{ rowDim: "b1" }, {}, {}]; // for rows with level 1
 
     let rowDimensions = [];
 

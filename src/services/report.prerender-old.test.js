@@ -1,19 +1,46 @@
 const srcFile = require("./report.prerender-old.js");
 
 describe("getRowDimensions()", () => {
-    const in_totalRowDimensions = 3;
+    const totalRowDimensions = 3;
 
-    const in_row = {
-        rowLevel: 2,
-        rowDim1: "b1",
-        rowDim2: "c1"
-        // other props
-    };
+    it("should return correct dimensions level_1", () => {
+        const row = {
+            rowLevel: 1,
+            rowDim1: "b1",
+            rowDim2: "c1"
+            // other props
+        };
 
-    const expected = [{}, { rowDim: "c1" }, {}];
+        const actual = srcFile.getRowDimensions(row, totalRowDimensions);
+        const expected = [{ rowDim: "b1" }, {}, {}];
+        expect(actual).toEqual(expected);
+    });
 
-    it("should return correct dimensions", () => {
-        expect(srcFile.getRowDimensions(in_row, in_totalRowDimensions)).toEqual(expected);
+    it("should return correct dimensions level_2", () => {
+        const row = {
+            rowLevel: 2,
+            rowDim1: "b1",
+            rowDim2: "c1"
+            // other props
+        };
+
+        const actual = srcFile.getRowDimensions(row, totalRowDimensions);
+        const expected = [{}, { rowDim: "c1" }, {}];
+        expect(actual).toEqual(expected);
+    });
+
+    it("should return correct dimensions level_3", () => {
+        const row = {
+            rowLevel: 3,
+            rowDim1: "b1",
+            rowDim2: "c1",
+            rowDim3: "d1"
+            // other props
+        };
+
+        const actual = srcFile.getRowDimensions(row, totalRowDimensions);
+        const expected = [{}, {}, { rowDim: "d1" }];
+        expect(actual).toEqual(expected);
     });
 });
 

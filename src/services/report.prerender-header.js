@@ -1,23 +1,23 @@
 const reportPrerender = require("./report.prerender-old");
 
 exports.getHeaderList = reportDataAsObj => {
-    const kv0s = reportDataAsObj[`v1-row-level-${0}`];
-    const kv0 = kv0s[0];
+    // create the header based on first reportData row (level=0)
+    const firstTreeRow = reportDataAsObj[`v1-row-level-${0}`][0];
 
     let headerList = [{ colLevel: 0 }]; // we have different headers for each variant
 
-    reportPrerender.addTreeObjectsToListRecursively(kv0, headerList);
+    reportPrerender.addTreeObjectsToListRecursively(firstTreeRow, headerList);
     return headerList;
 };
 
-exports.getReportHeaderRows = (sortedHeaderList, reportDefinition) => {
+exports.getReportHeaderRows = (headerList, reportDefinition) => {
     let rowDimensions = reportDefinition.rowDimensions;
     let totalRowDimensions = rowDimensions.length;
 
     let columnDimensions = reportDefinition.columnDimensions;
     let totalColumnDimensions = columnDimensions.length;
 
-    const headersWithDetails = this.getHeadersWithDetails(sortedHeaderList, totalColumnDimensions);
+    const headersWithDetails = this.getHeadersWithDetails(headerList, totalColumnDimensions);
     let headerRows = [];
 
     // init a header with empty rows
@@ -64,7 +64,7 @@ exports.getReportHeaderRows = (sortedHeaderList, reportDefinition) => {
     return headerRows;
 };
 
-exports.getHeadersWithDetails = (sortedHeaderList, totalColumnDimensions) => {
+exports.getHeadersWithDetails = (headerList, totalColumnDimensions) => {
     // loop through the array and enrich each element with:
     // 1. descendants, colspan and rowspan
     // 2. value ( = `colDim${colLevel}`)
@@ -76,8 +76,8 @@ exports.getHeadersWithDetails = (sortedHeaderList, totalColumnDimensions) => {
     }
 
     // loop through the array backwards and update counters and elem.descendants
-    for (let i = sortedHeaderList.length - 1; i >= 0; i--) {
-        let elem = sortedHeaderList[i];
+    for (let i = headerList.length - 1; i >= 0; i--) {
+        let elem = headerList[i];
 
         // update elem.descendants
         elem.descendants = counterObj[`counterLevel${elem.colLevel}`];
@@ -108,5 +108,5 @@ exports.getHeadersWithDetails = (sortedHeaderList, totalColumnDimensions) => {
         }
     }
 
-    return sortedHeaderList;
+    return headerList;
 };
