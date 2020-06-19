@@ -12,7 +12,7 @@ exports.getReportPreenderedData = (reportData, reportDefinition) => {
     let rows = [];
 
     // level 0
-    const kv0s = reportDataAsObj[`k1-v1-row-level-${0}`];
+    const kv0s = reportDataAsObj[`v1-row-level-${0}`];
     const kv0 = kv0s[0];
     rows.push(kv0);
 

@@ -124,7 +124,7 @@ exports.addRowsRecursively = (parentKv, totalRowDimensions, mongoDataAsObj, rows
     const curentRowLevel = parentKv.rowLevel + 1;
 
     if (curentRowLevel <= totalRowDimensions) {
-        let childKvs = mongoDataAsObj[`k1-v1-row-level-${curentRowLevel}`];
+        let childKvs = mongoDataAsObj[`v1-row-level-${curentRowLevel}`];
 
         if (curentRowLevel >= 2) {
             childKvs = childKvs.filter(x => {
