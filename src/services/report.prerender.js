@@ -18,7 +18,7 @@ exports.getReportPreenderedData = (reportData, reportDefinition) => {
 
     reportPrerender.addRowsRecursively(kv0, rowDimensions.length, reportDataAsObj, rows);
 
-    let header = {};
+    let reportHeader = {};
 
     let unsortedHeaderList = [{ colLevel: 0 }]; // we have different headers for each variant
 
@@ -28,20 +28,34 @@ exports.getReportPreenderedData = (reportData, reportDefinition) => {
     newRows = [];
     kpis.forEach(kpi => {
         rows.forEach(row => {
-            let newRow = {};
-            newRow.kpiNameCell = reportPrerender.getRowKpiNameCell(row, kpi);
+            let newRow = { columns: [] };
+
+            // 1. kpi name (1st cell)
+            const kpiName = row.rowLevel === 0 ? kpi.displayName : "";
+            newRow.columns.push({ value: kpiName });
+
             newRow.dimensions = reportPrerender.getRowDimensions(row, rowDimensions.length);
-            newRow[`valuesv1`] = reportPrerender.getSortedRowValuesList(row, unsortedHeaderList, kpi.kpiId);
+            newRow.dimensions.forEach(x => {
+                newRow.columns.push({ value: x.rowDim });
+            });
+
+            newRow.valuesv1 = reportPrerender.getSortedRowValuesList(row, unsortedHeaderList, kpi.kpiId);
+            newRow.valuesv1.forEach(x => {
+                newRow.columns.push({ value: x.measure });
+            });
+
             newRows.push(newRow);
         });
     });
 
-    header[`headerRows`] = reportPrerenderHeader.getReportHeaderRows(unsortedHeaderList, reportDefinition);
+    reportHeader[`rows`] = reportPrerenderHeader.getReportHeaderRows(unsortedHeaderList, reportDefinition);
+
+    const reportBody = { rows: newRows };
 
     let data = {
         reportName: "Sales profitability",
-        header,
-        rows: newRows
+        reportHeader,
+        reportBody: reportBody
     };
 
     return data;

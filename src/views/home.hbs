@@ -9,31 +9,21 @@
 
 <table class="table table-bordered table-sm">
     <thead class="text-center">
-        {{#each data.header.headerRows}}
+        {{#each data.reportHeader.rows}}
         <tr>
-            {{#each this}}
+            {{#each columns}}
             <th rowspan="{{rowspan}}" colspan="{{colspan}}">{{value}}</th>
             {{/each}}
         </tr>
         {{/each}}
-
     </thead>
 
-
     <tbody>
-        {{#each data.rows}}
+        {{#each data.reportBody.rows}}
         <tr>
+            {{#each columns}}
             <td>
-                {{kpiNameCell.name}}
-            </td>
-            {{#each dimensions}}
-            <td>
-                {{rowDim}}
-            </td>
-            {{/each}}
-            {{#each valuesv1}}
-            <td>
-                {{measure}}
+                {{value}}
             </td>
             {{/each}}
         </tr>

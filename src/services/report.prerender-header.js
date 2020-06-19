@@ -12,18 +12,18 @@ exports.getReportHeaderRows = (sortedHeaderList, reportDefinition) => {
 
     // init a header with empty rows
     for (let i = 0; i <= totalColumnDimensions; i++) {
-        headerRows.push([]);
+        headerRows.push({ columns: [] });
     }
 
     // first column, first row
-    headerRows[0].push({
+    headerRows[0].columns.push({
         rowspan: totalRowDimensions + 1,
         colSpan: 1,
         value: "KPI"
     });
 
     rowDimensions.forEach((dim, idx) => {
-        headerRows[0].push({
+        headerRows[0].columns.push({
             rowspan: totalRowDimensions + 1,
             colspan: 1,
             value: dim.fieldId
@@ -34,7 +34,7 @@ exports.getReportHeaderRows = (sortedHeaderList, reportDefinition) => {
         const elem = headersWithDetails[i];
 
         rowIdx = elem.colLevel;
-        headerRows[rowIdx].push({
+        headerRows[rowIdx].columns.push({
             rowspan: 1,
             colspan: elem.colspan,
             value: elem.value
@@ -43,7 +43,7 @@ exports.getReportHeaderRows = (sortedHeaderList, reportDefinition) => {
         rowIdx = elem.colLevel !== totalColumnDimensions ? elem.colLevel + 1 : elem.colLevel;
 
         if (elem.descendants > 0) {
-            headerRows[rowIdx].push({
+            headerRows[rowIdx].columns.push({
                 rowspan: elem.rowspan,
                 colspan: 1,
                 value: `Total ${elem.value}`
