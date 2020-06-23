@@ -5,28 +5,17 @@
 </style>
 {{/section}}
 
-<h4>{{data.reportName}}</h4>
+<div class="jumbotron">
+    <h1 class="display-4">Create, Share and Explore KPIs</h1>
+    <p class="lead">Give us a flat data source (e.g. CSV) and we will let you create, share and explore your own
+        KPIs.</p>
+    <hr class="my-4">
+    {{!-- <p>It uses utility classes for typography and spacing to space content out within the larger container.</p> --}}
+    <p class="lead">
+        <a class="btn btn-primary btn-lg" href="/reports" role="button">Demo</a>
+        <a class="btn btn-secondary btn-lg" href="#" role="button">Learn more</a>
+    </p>
+</div>
 
-<table class="table table-bordered table-sm">
-    <thead class="text-center">
-        {{#each data.reportHeader.rows}}
-        <tr>
-            {{#each columns}}
-            <th rowspan="{{rowspan}}" colspan="{{colspan}}">{{value}}</th>
-            {{/each}}
-        </tr>
-        {{/each}}
-    </thead>
-
-    <tbody>
-        {{#each data.reportBody.rows}}
-        <tr>
-            {{#each columns}}
-            <td>
-                {{value}}
-            </td>
-            {{/each}}
-        </tr>
-        {{/each}}
-    </tbody>
-</table>
+<a class="mr-2" href="/reports">Reports</a> |
+<a class="ml-2" href="/datasources">Data Sources</a>

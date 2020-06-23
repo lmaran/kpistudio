@@ -1,0 +1,31 @@
+{{!toJSON data}}
+{{#section 'head'}}
+<style>
+
+</style>
+{{/section}}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Acasă</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Reports</li>
+    </ol>
+</nav>
+
+<h4>Reports</h4>
+
+<ul>
+    {{#each data.reports}}
+    <li>
+        <a href="/reports/{{_id}}">{{name}}</a>
+    </li>
+    {{/each}}
+</ul>
+
+<ul>
+    <a href="/reports/new">Add new report</a>
+</ul>
+
+{{!-- <hr class="my-4">
+
+<a href="/datasources">Data Sources</a> --}}

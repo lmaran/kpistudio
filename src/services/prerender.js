@@ -17,7 +17,7 @@ exports.getReportPreenderedData = (reportData, reportDefinition) => {
     const bodyRows = prerenderBody.getBodyRows(reportDataAsObj, headerList, kpis, rowDimensions.length);
 
     let data = {
-        reportName: "Sales profitability",
+        reportName: reportDefinition.name,
         reportHeader: { rows: headerRows },
         reportBody: { rows: bodyRows }
     };

@@ -1,0 +1,40 @@
+{{!toJSON data}}
+{{#section 'head'}}
+<style>
+
+</style>
+{{/section}}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Acasă</a></li>
+        <li class="breadcrumb-item"><a href="/reports">Reports</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{data.reportName}}</li>
+    </ol>
+</nav>
+
+<h4>{{data.reportName}}</h4>
+
+<table class="table table-bordered table-sm">
+    <thead class="text-center">
+        {{#each data.reportHeader.rows}}
+        <tr>
+            {{#each columns}}
+            <th rowspan="{{rowspan}}" colspan="{{colspan}}">{{value}}</th>
+            {{/each}}
+        </tr>
+        {{/each}}
+    </thead>
+
+    <tbody>
+        {{#each data.reportBody.rows}}
+        <tr>
+            {{#each columns}}
+            <td>
+                {{value}}
+            </td>
+            {{/each}}
+        </tr>
+        {{/each}}
+    </tbody>
+</table>

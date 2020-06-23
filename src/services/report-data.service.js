@@ -1,14 +1,8 @@
 const mongoHelper = require("../helpers/mongo.helper");
-const { ObjectID } = require("mongodb");
-
-const reportDefinitionCollection = "reportDefinitions";
 const reportDataCollection = "reportData";
 
-exports.getReportTest = async () => {
+exports.getByReportDefinition = async reportDefinition => {
     const db = await mongoHelper.getDb();
-
-    const reportId = "5e94840bbff00f4417e6eb42";
-    const reportDefinition = await db.collection(reportDefinitionCollection).findOne({ _id: new ObjectID(reportId) });
 
     const facetsObj = {};
 
@@ -184,10 +178,4 @@ exports.getReportTest = async () => {
         .collection(reportDataCollection)
         .aggregate(pipeline)
         .toArray();
-};
-
-exports.getReportDefinition = async () => {
-    const id = "5e94840bbff00f4417e6eb42";
-    const db = await mongoHelper.getDb();
-    return db.collection(reportDefinitionCollection).findOne({ _id: new ObjectID(id) });
 };

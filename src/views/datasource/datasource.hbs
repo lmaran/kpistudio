@@ -1,0 +1,16 @@
+{{!toJSON data}}
+{{#section 'head'}}
+<style>
+
+</style>
+{{/section}}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Acasă</a></li>
+        <li class="breadcrumb-item"><a href="/datasources">Datasources</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{data.datasource.name}}</li>
+    </ol>
+</nav>
+
+<h4>{{data.datasource.name}}</h4>
