@@ -16,6 +16,7 @@ router.get("/reports/:reportId", reportController.getReport);
 // Data Sources
 router.get("/datasources", datasourceController.getDatasources);
 router.get("/datasources/new", datasourceController.createDatasource);
+router.post("/datasources/fileupload", datasourceController.uploadDatasource);
 router.get("/datasources/:datasourceId", datasourceController.getDatasource);
 
 module.exports = router;

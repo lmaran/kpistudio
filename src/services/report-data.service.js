@@ -174,8 +174,23 @@ exports.getByReportDefinition = async reportDefinition => {
     // console.log(pipelineForDebug);
     // console.log("-----------------------------------------");
 
+    const options = {
+        allowDiskUse: false
+    };
+
     return db
         .collection(reportDataCollection)
-        .aggregate(pipeline)
+        .aggregate(pipeline, options)
         .toArray();
+
+    // we can also use a cursor here:
+    // var cursor = collection.aggregate(pipeline, options);
+    // cursor.forEach(
+    //     function(doc) {
+    //         console.log(doc);
+    //     },
+    //     function(err) {
+    //         client.close();
+    //     }
+    // );
 };
